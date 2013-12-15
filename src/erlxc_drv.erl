@@ -33,7 +33,7 @@
     lxc_container_new,
     lxc_container_start,
     lxc_container_stop,
-    lxc_container_set_config_item,
+%    lxc_container_set_config_item,
     lxc_container_load_config
 }).
 
@@ -125,7 +125,8 @@ command(Cmd) when is_atom(Cmd) ->
 lookup(Cmd, Cmds) ->
     lookup(Cmd, 1, Cmds, tuple_size(Cmds)).
 lookup(Cmd, N, Cmds, _Max) when Cmd =:= element(N, Cmds) ->
-    N;
+    % Convert to 0 offset
+    N-1;
 lookup(Cmd, N, Cmds, Max) when N =< Max ->
     lookup(Cmd, N+1, Cmds, Max).
 

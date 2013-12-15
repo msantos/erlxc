@@ -60,14 +60,6 @@ ETERM *erlxc_ok(ETERM *);
 ETERM *erlxc_errno(int);
 
 ETERM *erlxc_cmd(erlxc_state_t *, u_int32_t, ETERM *);
-ETERM *erlxc_lxc_container_new(erlxc_state_t *, ETERM *);
-ETERM *erlxc_lxc_container_start(erlxc_state_t *, ETERM *);
-ETERM *erlxc_lxc_container_stop(erlxc_state_t *, ETERM *);
-ETERM *erlxc_list_containers(erlxc_state_t *, ETERM *,
-        int (*)(const char *, char ***, struct lxc_container ***));
-ETERM *erlxc_lxc_container_load_config(erlxc_state_t *, ETERM *);
-
-struct lxc_container *erlxc_cid(erlxc_state_t *, int);
 
 #define VERBOSE(x, ...) do { \
     if (ep->verbose >= x) { \
