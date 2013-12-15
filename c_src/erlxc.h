@@ -38,8 +38,6 @@
 #define ERLXC_VERSION   "0.1.0"
 
 #define LXCMAX  128
-#define LXCNAME "erlxc"
-#define LXCPATH "/var/lib/lxc"
 
 typedef struct {
     u_int32_t cur;

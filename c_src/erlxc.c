@@ -188,8 +188,6 @@ usage(erlxc_state_t *ep)
     (void)fprintf(stderr, "%s, %s\n", __progname, ERLXC_VERSION);
     (void)fprintf(stderr,
             "usage: %s <options>\n"
-            "              -n <name>        LXC name [default:" LXCNAME "]\n"
-            "              -p <directory>   LXC path [default:" LXCPATH "]\n"
             "              -v               verbose mode\n",
             __progname
             );
