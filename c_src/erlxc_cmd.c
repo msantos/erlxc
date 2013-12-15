@@ -161,13 +161,9 @@ erlxc_lxc_container_start(erlxc_state_t *ep, ETERM *arg)
 
     useinit = ERL_INT_VALUE(hd);
 
-    VERBOSE(2, "see this1");
-
     /* argv */
-    /*
     if (erlxc_list_to_argv(&argv, arg) < 0)
         goto BADARG;
-        */
 
     config_file_name = c->config_file_name(c);
     VERBOSE(2, "see this: name=%s, useinit=%d, config_file_name=%s", c->name, useinit, config_file_name);
@@ -181,14 +177,16 @@ erlxc_lxc_container_start(erlxc_state_t *ep, ETERM *arg)
         case -1:
             return erlxc_errno(errnum);
         case 0:
-            return erlxc_tuple2(erl_mk_atom("ok"), erl_mk_int(pid));
-        default:
             res = c->start(c, useinit, argv);
             (void)res;
             erl_err_quit("start failed");
+        default:
+            erlxc_free_argv(&argv);
+            return erlxc_tuple2(erl_mk_atom("ok"), erl_mk_int(pid));
     }
     
 BADARG:
+    erlxc_free_argv(&argv);
     return erl_mk_atom("badarg");
 }
 
@@ -349,6 +347,9 @@ erlxc_free_argv(char ***argv)
 {
     int i = 0;
 
-    for (i = 0; argv[i] != NULL; i++)
-        erl_free(argv[i]);
+    if (argv == NULL)
+        return;
+
+    for (i = 0; *argv[i] != NULL; i++)
+        erl_free(*argv[i]);
 }
