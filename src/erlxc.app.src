@@ -1,0 +1,11 @@
+{application, erlxc,
+    [
+    {description, "Erlang Linux Container port driver"},
+    {vsn, "0.1.0"},
+    {registered, []},
+    {applications, [
+        kernel,
+        stdlib
+            ]},
+    {env, []}
+    ]}.
