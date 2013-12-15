@@ -60,7 +60,7 @@ erlxc_cmd(erlxc_state_t *ep, u_int32_t cmd, ETERM *arg)
         erl_print_term(stderr, arg);
 
     if (cmd >= sizeof(cmds)/sizeof(cmds[0]))
-        return erlxc_error("einval");
+        return erlxc_errno(EINVAL);
 
     fun = &cmds[cmd];
 
@@ -79,7 +79,7 @@ erlxc_lxc_container_new(erlxc_state_t *ep, ETERM *arg)
     char *path = NULL;
 
     if (ep->cur >= ep->max)
-        return erlxc_error("emfile");
+        return erlxc_errno(EMFILE);
 
     arg = erlxc_list_head(&hd, arg);
 
@@ -136,8 +136,6 @@ erlxc_lxc_container_start(erlxc_state_t *ep, ETERM *arg)
 
     // bool (*start)(struct lxc_container *c, int useinit, char * const argv[]);
 
-    erl_print_term(stderr, arg);
-
     /* cid */
     arg = erlxc_list_head(&hd, arg);
     if (!hd)
@@ -145,7 +143,7 @@ erlxc_lxc_container_start(erlxc_state_t *ep, ETERM *arg)
 
     c = erlxc_cid(ep, ERL_INT_VALUE(hd));
     if (!c)
-        return erlxc_error("einval");
+        return erlxc_errno(EINVAL);
 
     /* useinit */
     arg = erlxc_list_head(&hd, arg);
@@ -155,8 +153,10 @@ erlxc_lxc_container_start(erlxc_state_t *ep, ETERM *arg)
     useinit = ERL_INT_VALUE(hd);
 
     /* argv */
+    /*
     if (erlxc_list_to_argv(&argv, arg) < 0)
         goto BADARG;
+        */
 
     config_file_name = c->config_file_name(c);
     VERBOSE(2, "see this: name=%s, useinit=%d, config_file_name=%s", c->name, useinit, config_file_name);
@@ -197,7 +197,7 @@ erlxc_lxc_container_stop(erlxc_state_t *ep, ETERM *arg)
 
     c = erlxc_cid(ep, ERL_INT_VALUE(hd));
     if (!c)
-        return erlxc_error("einval");
+        return erlxc_errno(EINVAL);
 
     errno = 0;
     res = c->stop(c);
@@ -224,7 +224,7 @@ erlxc_lxc_container_load_config(erlxc_state_t *ep, ETERM *arg)
 
     c = erlxc_cid(ep, ERL_INT_VALUE(hd));
     if (!c)
-        return erlxc_error("einval");
+        return erlxc_errno(EINVAL);
 
     arg = erlxc_list_head(&hd, arg);
     if (!hd)

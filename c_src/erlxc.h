@@ -44,7 +44,6 @@ typedef struct {
     u_int32_t max;
     u_int8_t verbose;
     struct lxc_container **c;
-    //erlxc_lxc_t *c;
 } erlxc_state_t;
 
 typedef struct {
