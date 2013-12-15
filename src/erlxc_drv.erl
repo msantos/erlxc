@@ -19,6 +19,7 @@
 -export([start_link/2]).
 -export([call/2]).
 -export([encode/2]).
+-export([getopts/1]).
 
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
@@ -72,9 +73,10 @@ encode(Command, Arg) when is_integer(Command), is_list(Arg) ->
 stop(Pid) ->
     gen_server:call(Pid, stop).
 
-init([Pid, _Options]) ->
+init([Pid, Options]) ->
     process_flag(trap_exit, true),
-    Port = open_port({spawn, "sudo priv/erlxc -vvv"}, [{packet, 4}, binary]),
+    Cmd = getopts(Options),
+    Port = open_port({spawn, Cmd}, [{packet, 4}, binary]),
     {ok, #state{pid = Pid, port = Port}}.
 
 handle_call({call, Packet}, _From, #state{port = Port} = State) ->
@@ -126,3 +128,34 @@ lookup(Cmd, N, Cmds, _Max) when Cmd =:= element(N, Cmds) ->
     N;
 lookup(Cmd, N, Cmds, Max) when N =< Max ->
     lookup(Cmd, N+1, Cmds, Max).
+
+getopts(Options) when is_list(Options) ->
+    Exec = proplists:get_value(exec, Options, "sudo"),
+    Progname = proplists:get_value(progname, Options, progname()),
+
+    Switches = [ optarg(Opt) || Opt <- proplists:compact(Options) ],
+    Cmd = [ N || N <- [Exec, Progname|Switches], N /= ""],
+
+    string:join(Cmd, " ").
+
+optarg({verbose, Arg})      -> string:copies("-v ", Arg);
+optarg(_)                   -> "".
+
+%switch(Switch, Arg) ->
+%    lists:concat([Switch, " ", Arg]).
+
+basedir(Module) ->
+    case code:priv_dir(Module) of
+        {error, bad_name} ->
+            filename:join([
+                filename:dirname(code:which(Module)),
+                "..",
+                "priv",
+                Module
+            ]);
+        Dir ->
+            Dir
+        end.
+
+progname() ->
+    filename:join([basedir("erlxc"), "erlxc"]).
