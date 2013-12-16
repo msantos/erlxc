@@ -21,6 +21,7 @@ static ETERM *erlxc_lxc_container_new(erlxc_state_t *, ETERM *);
 static ETERM *erlxc_lxc_container_start(erlxc_state_t *, ETERM *);
 static ETERM *erlxc_lxc_container_stop(erlxc_state_t *, ETERM *);
 static ETERM *erlxc_lxc_container_load_config(erlxc_state_t *, ETERM *);
+static ETERM *erlxc_lxc_container_get_config_item(erlxc_state_t *, ETERM *);
 static ETERM *erlxc_lxc_container_set_config_item(erlxc_state_t *, ETERM *);
 
 static ETERM *erlxc_argv(erlxc_state_t *, ETERM *);
@@ -45,6 +46,7 @@ erlxc_cmd_t cmds[] = {
     {erlxc_lxc_container_new, 2},
     {erlxc_lxc_container_start, 3},
     {erlxc_lxc_container_stop, 1},
+    {erlxc_lxc_container_get_config_item, 2},
     {erlxc_lxc_container_set_config_item, 3},
     {erlxc_lxc_container_load_config, 2},
 
@@ -251,6 +253,48 @@ erlxc_lxc_container_load_config(erlxc_state_t *ep, ETERM *arg)
     return (c->load_config(c, path) ? erl_mk_atom("ok") : erlxc_errno(errno));
 
 BADARG:
+    return erl_mk_atom("badarg");
+}
+
+    static ETERM *
+erlxc_lxc_container_get_config_item(erlxc_state_t *ep, ETERM *arg)
+{
+    ETERM *hd = NULL;
+    struct lxc_container *c = NULL;
+    char *key = NULL;
+    char buf[4096] = {0};
+    int n = 0;
+    int errnum = 0;
+
+    arg = erlxc_list_head(&hd, arg);
+    if (!hd)
+        goto BADARG;
+
+    c = erlxc_cid(ep, ERL_INT_VALUE(hd));
+    if (!c)
+        return erlxc_errno(EINVAL);
+
+    /* key */
+    arg = erlxc_list_head(&hd, arg);
+    if (!hd)
+        goto BADARG;
+
+    if (erl_iolist_length(hd) > 0)
+        key = erl_iolist_to_string(hd);
+
+    if (!key)
+        goto BADARG;
+
+    n = c->get_config_item(c, key, buf, sizeof(buf));
+    errnum = errno;
+
+    erl_free(key);
+
+    return (n > 0 ? erlxc_tuple2(erl_mk_atom("ok"), erl_mk_binary(buf,n)) : erlxc_errno(errnum));
+
+BADARG:
+    erl_free(key);
+
     return erl_mk_atom("badarg");
 }
 
