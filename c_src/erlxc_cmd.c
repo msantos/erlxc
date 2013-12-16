@@ -21,6 +21,7 @@ static ETERM *erlxc_lxc_container_new(erlxc_state_t *, ETERM *);
 static ETERM *erlxc_lxc_container_start(erlxc_state_t *, ETERM *);
 static ETERM *erlxc_lxc_container_stop(erlxc_state_t *, ETERM *);
 static ETERM *erlxc_lxc_container_load_config(erlxc_state_t *, ETERM *);
+static ETERM *erlxc_lxc_container_set_config_item(erlxc_state_t *, ETERM *);
 
 static ETERM *erlxc_argv(erlxc_state_t *, ETERM *);
 
@@ -44,7 +45,9 @@ erlxc_cmd_t cmds[] = {
     {erlxc_lxc_container_new, 2},
     {erlxc_lxc_container_start, 3},
     {erlxc_lxc_container_stop, 1},
+    {erlxc_lxc_container_set_config_item, 3},
     {erlxc_lxc_container_load_config, 2},
+
     {erlxc_argv, 1},
 };
 
@@ -245,13 +248,65 @@ erlxc_lxc_container_load_config(erlxc_state_t *ep, ETERM *arg)
             goto BADARG;
     }
 
-    errno = 0;
-    if (c->load_config(c, path))
-        return erl_mk_atom("ok");
-    else
-        return erlxc_errno(errno);
+    return (c->load_config(c, path) ? erl_mk_atom("ok") : erlxc_errno(errno));
 
 BADARG:
+    return erl_mk_atom("badarg");
+}
+
+    static ETERM *
+erlxc_lxc_container_set_config_item(erlxc_state_t *ep, ETERM *arg)
+{
+    ETERM *hd = NULL;
+    struct lxc_container *c = NULL;
+    char *key = NULL;
+    char *val = NULL;
+    bool res;
+    int errnum = 0;
+
+    arg = erlxc_list_head(&hd, arg);
+    if (!hd)
+        goto BADARG;
+
+    c = erlxc_cid(ep, ERL_INT_VALUE(hd));
+    if (!c)
+        return erlxc_errno(EINVAL);
+
+    /* key */
+    arg = erlxc_list_head(&hd, arg);
+    if (!hd)
+        goto BADARG;
+
+    if (erl_iolist_length(hd) > 0)
+        key = erl_iolist_to_string(hd);
+
+    if (!key)
+        goto BADARG;
+
+    /* value */
+    arg = erlxc_list_head(&hd, arg);
+    if (!hd)
+        goto BADARG;
+
+    if (erl_iolist_length(hd) > 0) {
+        val = erl_iolist_to_string(hd);
+        if (!val)
+            goto BADARG;
+    }
+
+    errno = 0;
+    res = c->set_config_item(c, key, val);
+    errnum = errno;
+
+    erl_free(key);
+    erl_free(val);
+
+    return (res ? erl_mk_atom("ok") : erlxc_errno(errnum));
+
+BADARG:
+    erl_free(key);
+    erl_free(val);
+
     return erl_mk_atom("badarg");
 }
 

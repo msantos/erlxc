@@ -18,6 +18,7 @@
         new/2, new/3,
         start/2, start/4,
         stop/2,
+        set_config_item/4,
         load_config/2, load_config/3,
         list/1, list/2, list/3,
 
@@ -41,6 +42,9 @@ start(Ref, C, Useinit, Argv) ->
 
 stop(Ref, C) ->
     call(Ref, lxc_container_stop, [C]).
+
+set_config_item(Ref, C, Key, Val) ->
+    call(Ref, lxc_container_set_config_item, [C, Key, Val]).
 
 load_config(Ref, C) ->
     load_config(Ref, C, <<>>).
