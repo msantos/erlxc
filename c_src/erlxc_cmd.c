@@ -13,18 +13,7 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 #include "erlxc.h"
-
-static ETERM *erlxc_list_active_containers(erlxc_state_t *, ETERM *);
-static ETERM *erlxc_list_all_containers(erlxc_state_t *, ETERM *);
-static ETERM *erlxc_list_defined_containers(erlxc_state_t *, ETERM *);
-static ETERM *erlxc_lxc_container_new(erlxc_state_t *, ETERM *);
-static ETERM *erlxc_lxc_container_start(erlxc_state_t *, ETERM *);
-static ETERM *erlxc_lxc_container_stop(erlxc_state_t *, ETERM *);
-static ETERM *erlxc_lxc_container_load_config(erlxc_state_t *, ETERM *);
-static ETERM *erlxc_lxc_container_get_config_item(erlxc_state_t *, ETERM *);
-static ETERM *erlxc_lxc_container_set_config_item(erlxc_state_t *, ETERM *);
-
-static ETERM *erlxc_argv(erlxc_state_t *, ETERM *);
+#include "erlxc_cmd.h"
 
 static struct lxc_container *erlxc_cid(erlxc_state_t *, int);
 
@@ -32,26 +21,6 @@ static char **erlxc_list_to_argv(ETERM *);
 static void erlxc_free_argv(char **);
 static ETERM *erlxc_list_containers(erlxc_state_t *, ETERM *,
         int (*)(const char *, char ***, struct lxc_container ***));
-
-/* commands */
-typedef struct {
-    ETERM *(*fp)(erlxc_state_t *, ETERM *);
-    u_int8_t narg;
-} erlxc_cmd_t;
-
-erlxc_cmd_t cmds[] = {
-    {erlxc_list_active_containers, 1},
-    {erlxc_list_all_containers, 1},
-    {erlxc_list_defined_containers, 1},
-    {erlxc_lxc_container_new, 2},
-    {erlxc_lxc_container_start, 3},
-    {erlxc_lxc_container_stop, 1},
-    {erlxc_lxc_container_get_config_item, 2},
-    {erlxc_lxc_container_set_config_item, 3},
-    {erlxc_lxc_container_load_config, 2},
-
-    {erlxc_argv, 1},
-};
 
 /* Options */
 enum {

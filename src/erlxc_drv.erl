@@ -25,21 +25,6 @@
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
          terminate/2, code_change/3]).
 
--define(ERLXC_COMMAND, {
-    list_active_containers,
-    list_all_containers,
-    list_defined_containers,
-
-    lxc_container_new,
-    lxc_container_start,
-    lxc_container_stop,
-    lxc_container_get_config_item,
-    lxc_container_set_config_item,
-    lxc_container_load_config,
-
-    argv
-}).
-
 -record(state, {pid :: pid(), port :: port()}).
 
 start() ->
@@ -68,8 +53,6 @@ call(Pid, Data) when is_pid(Pid), is_binary(Data), byte_size(Data) < 16#ffff ->
         _ -> Reply
     end.
 
-encode(Command, Arg) when is_atom(Command) ->
-    encode(command(Command), Arg);
 encode(Command, Arg) when is_integer(Command), is_list(Arg) ->
     <<Command:4/unsigned-integer-unit:8, (term_to_binary(Arg))/binary>>.
 
@@ -122,17 +105,6 @@ handle_info(Info, State) ->
 %%--------------------------------------------------------------------
 %%% Internal functions
 %%--------------------------------------------------------------------
-command(Cmd) when is_atom(Cmd) ->
-    lookup(Cmd, ?ERLXC_COMMAND).
-
-lookup(Cmd, Cmds) ->
-    lookup(Cmd, 1, Cmds, tuple_size(Cmds)).
-lookup(Cmd, N, Cmds, _Max) when Cmd =:= element(N, Cmds) ->
-    % Convert to 0 offset
-    N-1;
-lookup(Cmd, N, Cmds, Max) when N =< Max ->
-    lookup(Cmd, N+1, Cmds, Max).
-
 getopts(Options) when is_list(Options) ->
     Exec = proplists:get_value(exec, Options, "sudo"),
     Progname = proplists:get_value(progname, Options, progname()),
