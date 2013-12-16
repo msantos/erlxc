@@ -22,10 +22,12 @@ static ETERM *erlxc_lxc_container_start(erlxc_state_t *, ETERM *);
 static ETERM *erlxc_lxc_container_stop(erlxc_state_t *, ETERM *);
 static ETERM *erlxc_lxc_container_load_config(erlxc_state_t *, ETERM *);
 
+static ETERM *erlxc_argv(erlxc_state_t *, ETERM *);
+
 static struct lxc_container *erlxc_cid(erlxc_state_t *, int);
 
-static int erlxc_list_to_argv(char ***, ETERM *);
-static void erlxc_free_argv(char ***);
+static char **erlxc_list_to_argv(ETERM *);
+static void erlxc_free_argv(char **);
 static ETERM *erlxc_list_containers(erlxc_state_t *, ETERM *,
         int (*)(const char *, char ***, struct lxc_container ***));
 
@@ -43,6 +45,7 @@ erlxc_cmd_t cmds[] = {
     {erlxc_lxc_container_start, 3},
     {erlxc_lxc_container_stop, 1},
     {erlxc_lxc_container_load_config, 2},
+    {erlxc_argv, 1},
 };
 
 /* Options */
@@ -153,13 +156,19 @@ erlxc_lxc_container_start(erlxc_state_t *ep, ETERM *arg)
     useinit = ERL_INT_VALUE(hd);
 
     /* argv */
-    /*
-    if (erlxc_list_to_argv(&argv, arg) < 0)
+    arg = erlxc_list_head(&hd, arg);
+    if (!hd)
         goto BADARG;
-        */
+
+    if (!ERL_IS_EMPTY_LIST(hd)) {
+        argv = erlxc_list_to_argv(hd);
+        if (!argv)
+            goto BADARG;
+        (void)fprintf(stderr, "argv=%p, len=%d", argv, erl_length(hd));
+    }
 
     config_file_name = c->config_file_name(c);
-    VERBOSE(2, "see this: name=%s, useinit=%d, config_file_name=%s", c->name, useinit, config_file_name);
+    VERBOSE(2, "start: name=%s, useinit=%d, config_file_name=%s", c->name, useinit, config_file_name);
 
     if (!lxc_container_get(c))
         goto BADARG;
@@ -172,14 +181,14 @@ erlxc_lxc_container_start(erlxc_state_t *ep, ETERM *arg)
         case 0:
             res = c->start(c, useinit, argv);
             (void)res;
-            erl_err_quit("start failed");
+            erl_err_quit("container stopped");
         default:
-//            erlxc_free_argv(&argv);
+            erlxc_free_argv(argv);
             return erlxc_tuple2(erl_mk_atom("ok"), erl_mk_int(pid));
     }
 
 BADARG:
-//    erlxc_free_argv(&argv);
+    erlxc_free_argv(argv);
     return erl_mk_atom("badarg");
 }
 
@@ -319,38 +328,69 @@ erlxc_cid(erlxc_state_t *ep, int cid)
     return ep->c[cid];
 }
 
-    static int
-erlxc_list_to_argv(char ***argv, ETERM *arg)
+    static ETERM *
+erlxc_argv(erlxc_state_t *ep, ETERM *arg)
 {
-    int len = 0; /* XXX overflow */
+    ETERM *hd = NULL;
+    char **argv = NULL;
+    int len = 0;
     int i = 0;
 
-    len = erl_length(arg);
-    /* NULL terminate */
-    *argv = erl_malloc((len + 1) * sizeof(char **));
-    (void)memset(*argv, 0, len+1);
+    arg = erlxc_list_head(&hd, arg);
+    if (!hd)
+        return erl_mk_atom("badarg");
 
-    if (!*argv)
-        return -1;
+    len = erl_length(hd);
+    VERBOSE(0, "len=%d", len);
+
+    argv = erlxc_list_to_argv(hd);
+
+    if (!argv)
+        return erl_mk_atom("badarg");
+
+    for (i = 0; i < len; i++)
+        (void)fprintf(stderr, "arg[%d]=%s", i, argv[i]);
+
+    return erl_mk_atom("ok");
+}
+
+    char **
+erlxc_list_to_argv(ETERM *arg)
+{
+    ETERM *hd = NULL;
+    int len = 0; /* XXX overflow */
+    int i = 0;
+    char **argv = NULL;
+
+    len = erl_length(arg);
+
+    /* NULL terminate */
+    argv = calloc(len + 1, sizeof(char **));
+
+    if (!argv)
+        return NULL;
 
     for (i = 0; i < len; i++) {
-        *argv[i] = erl_iolist_to_string(arg);
-        /* XXX free/crash here */
-        if (!*argv[i])
-            return -1;
+        arg = erlxc_list_head(&hd, arg);
+        if (!hd)
+            return NULL;
+
+        argv[i] = erl_iolist_to_string(hd);
+        if (!argv[i])
+            return NULL;
     }
 
-    return 0;
+    return argv;
 }
 
     static void
-erlxc_free_argv(char ***argv)
+erlxc_free_argv(char **argv)
 {
     int i = 0;
 
     if (argv == NULL)
         return;
 
-    for (i = 0; *argv[i] != NULL; i++)
-        erl_free(*argv[i]);
+    for (i = 0; argv[i] != NULL; i++)
+        erl_free(argv[i]);
 }

@@ -34,7 +34,8 @@
     lxc_container_start,
     lxc_container_stop,
 %    lxc_container_set_config_item,
-    lxc_container_load_config
+    lxc_container_load_config,
+    argv
 }).
 
 -record(state, {pid :: pid(), port :: port()}).

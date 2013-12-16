@@ -21,8 +21,13 @@
         load_config/2, load_config/3,
         list/1, list/2, list/3,
 
+        argv/2,
+
         call/2, call/3
     ]).
+
+argv(Ref, N) when is_list(N) ->
+    call(Ref, argv, [N]).
 
 new(Ref, Name) ->
     new(Ref, Name, <<>>).
