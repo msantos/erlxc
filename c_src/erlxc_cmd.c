@@ -226,6 +226,27 @@ BADARG:
 }
 
     static ETERM *
+erlxc_lxc_container_clear_config(erlxc_state_t *ep, ETERM *arg)
+{
+    ETERM *hd = NULL;
+    struct lxc_container *c = NULL;
+
+    arg = erlxc_list_head(&hd, arg);
+    if (!hd)
+        goto BADARG;
+
+    c = erlxc_cid(ep, ERL_INT_VALUE(hd));
+    if (!c)
+        return erlxc_errno(EINVAL);
+
+    c->clear_config(c);
+    return erl_mk_atom("ok");
+
+BADARG:
+    return erl_mk_atom("badarg");
+}
+
+    static ETERM *
 erlxc_lxc_container_get_config_item(erlxc_state_t *ep, ETERM *arg)
 {
     ETERM *hd = NULL;
