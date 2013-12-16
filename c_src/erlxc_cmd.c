@@ -293,9 +293,10 @@ erlxc_lxc_container_get_config_item(erlxc_state_t *ep, ETERM *arg)
     ETERM *hd = NULL;
     struct lxc_container *c = NULL;
     char *key = NULL;
-    char buf[4096] = {0};
+    char *buf = NULL;
     int n = 0;
-    int errnum = 0;
+    ETERM *res = NULL;
+
 
     arg = erlxc_list_head(&hd, arg);
     if (!hd)
@@ -316,15 +317,32 @@ erlxc_lxc_container_get_config_item(erlxc_state_t *ep, ETERM *arg)
     if (!key)
         goto BADARG;
 
-    n = c->get_config_item(c, key, buf, sizeof(buf));
-    errnum = errno;
+    n = c->get_config_item(c, key, NULL, 0);
+
+    /* 0 is ??? */
+    if (n < 1) {
+        erl_free(key);
+        return erlxc_error("not_found");
+    }
+
+    /* account for null */
+    buf = erl_malloc(n+1);
+    if (!buf)
+        goto BADARG;
+
+    (void)c->get_config_item(c, key, buf, n+1);
+
+    /* null is not included in binary */
+    res = erl_mk_binary(buf, n);
 
     erl_free(key);
+    erl_free(buf);
 
-    return (n > 0 ? erlxc_tuple2(erl_mk_atom("ok"), erl_mk_binary(buf,n)) : erlxc_errno(errnum));
+    return erlxc_tuple2(erl_mk_atom("ok"), res);
 
 BADARG:
     erl_free(key);
+    erl_free(buf);
 
     return erl_mk_atom("badarg");
 }
