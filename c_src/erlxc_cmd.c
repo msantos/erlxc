@@ -226,6 +226,51 @@ BADARG:
 }
 
     static ETERM *
+erlxc_lxc_container_get_keys(erlxc_state_t *ep, ETERM *arg)
+{
+    ETERM *hd = NULL;
+    struct lxc_container *c = NULL;
+    char *key = NULL;
+    char buf[2048] = {0};
+    int n = 0;
+    int len = 0;
+
+    arg = erlxc_list_head(&hd, arg);
+    if (!hd)
+        goto BADARG;
+
+    c = erlxc_cid(ep, ERL_INT_VALUE(hd));
+    if (!c)
+        return erlxc_errno(EINVAL);
+
+    arg = erlxc_list_head(&hd, arg);
+    if (!hd)
+        goto BADARG;
+
+    if (erl_iolist_length(hd) > 0) {
+        key = erl_iolist_to_string(hd);
+        if (!key)
+            goto BADARG;
+    }
+
+    if (!key)
+        len = c->get_keys(c, NULL, NULL, 0);
+
+    /* XXX better error if length is too large */
+    if (len < 0 || len >= sizeof(buf))
+        goto BADARG;
+
+    n = c->get_keys(c, key, buf, (key ? sizeof(buf) : len+1));
+
+    return (n > 0 ? erlxc_tuple2(erl_mk_atom("ok"), erl_mk_binary(buf, n)) : erlxc_error("none"));
+
+BADARG:
+    erl_free(key);
+
+    return erl_mk_atom("badarg");
+}
+
+    static ETERM *
 erlxc_lxc_container_clear_config(erlxc_state_t *ep, ETERM *arg)
 {
     ETERM *hd = NULL;
@@ -322,7 +367,7 @@ erlxc_lxc_container_get_config_item(erlxc_state_t *ep, ETERM *arg)
     /* 0 is ??? */
     if (n < 1) {
         erl_free(key);
-        return erlxc_error("not_found");
+        return erlxc_error("none");
     }
 
     /* account for null */

@@ -148,6 +148,7 @@ static_exports() ->
      {list,2},
      {list,3},
      {new,2},
+     {get_keys,2},
      {command,1},
      {call,2},
      {call,3}].
@@ -178,6 +179,12 @@ static({new,2}) ->
 "
 new(Ref, Name) ->
     new(Ref, Name, <<>>).
+";
+
+static({get_keys,2}) ->
+"
+get_keys(Ref, Container) ->
+    get_keys(Ref, Container, <<>>).
 ";
 
 static({command,1}) ->
