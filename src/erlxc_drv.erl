@@ -134,4 +134,4 @@ basedir(Module) ->
         end.
 
 progname() ->
-    filename:join([basedir("erlxc"), "erlxc"]).
+    filename:join([basedir(erlxc), "erlxc"]).
