@@ -90,7 +90,7 @@ erlxc_lxc_container_new(erlxc_state_t *ep, ETERM *arg)
 
     ep->c[ep->cur] = c;
 
-    return erlxc_ok(erl_mk_int(ep->cur++));
+    return erlxc_ok(erl_mk_uint(ep->cur++));
 
 BADARG:
     erl_free(name);
@@ -188,6 +188,31 @@ erlxc_lxc_container_stop(erlxc_state_t *ep, ETERM *arg)
 
     lxc_container_put(c);
     return (res ? erl_mk_atom("ok") : erlxc_errno(errnum));
+
+BADARG:
+    lxc_container_put(c);
+    return erl_mk_atom("badarg");
+}
+
+    static ETERM *
+erlxc_lxc_container_init_pid(erlxc_state_t *ep, ETERM *arg)
+{
+    ETERM *hd = NULL;
+    struct lxc_container *c = NULL;
+    pid_t pid = -1;
+
+    arg = erlxc_list_head(&hd, arg);
+    if (!hd)
+        goto BADARG;
+
+    c = erlxc_cid(ep, ERL_INT_VALUE(hd));
+    if (!c)
+        return erlxc_errno(EINVAL);
+
+    pid = c->init_pid(c);
+
+    /* XXX overflow pid_t -> int */
+    return erlxc_tuple2(erl_mk_atom("ok"), erl_mk_int(pid));
 
 BADARG:
     lxc_container_put(c);
