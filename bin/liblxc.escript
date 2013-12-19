@@ -38,7 +38,7 @@ api(Proto) ->
 
     % Generate the function
     Pattern = [],
-    Body = erl_syntax:tuple([ erl_syntax:atom(N) || {N,_,_} <- Calls ]),
+    Body = erl_syntax:tuple([ erl_syntax:atom(N) || {N,_} <- Calls ]),
     Clause = erl_syntax:clause(Pattern, [], [Body]),
     [erl_syntax:function(erl_syntax:atom("api"), [Clause])].
 
@@ -66,36 +66,22 @@ mkerl(File, Proto) ->
     Exports_gen = erl_syntax:attribute(erl_syntax:atom(export), [
                 erl_syntax:list([
                     erl_syntax:arity_qualifier(erl_syntax:atom(Fun), erl_syntax:integer(Arity+1))
-                        || {Fun, _, Arity} <- Calls ])
+                        || {Fun, Arity} <- Calls ])
                 ]),
 
     % Generate the functions
     Functions = [ begin
-                    {Pattern, Body} = case UseCID of
-                        true ->
-                            % name(Ref, Container, ...) -> call(Ref, Fun, [Container, ...])
-                            Arg = arg("Arg", Arity-1),
-                            P = [erl_syntax:variable("Ref"), erl_syntax:variable("Container")|Arg],
-                            B = erl_syntax:application(
-                                    erl_syntax:atom(call),
-                                    [erl_syntax:variable("Ref"), erl_syntax:atom(Fun),
-                                       erl_syntax:list([erl_syntax:variable("Container")|Arg])]),
-                            {P,B};
-
-                        false ->
-                            % name(Ref, Container, ...) -> liblxc:call(Ref, Fun, [...])
-                            Arg = arg("Arg", Arity),
-                            P = [erl_syntax:variable("Ref")|Arg],
-                            B = erl_syntax:application(
-                                    erl_syntax:atom(call),
-                                    [erl_syntax:variable("Ref"), erl_syntax:atom(Fun),
-                                       erl_syntax:list(Arg)]),
-                            {P,B}
-                    end,
-
+                    % name(Ref, Container, ...) -> liblxc:call(Ref, Fun, [...])
+                    Arg = arg("Arg", Arity),
+                    Pattern = [erl_syntax:variable("Ref")|Arg],
+                    Body = erl_syntax:application(
+                        erl_syntax:atom(call),
+                        [erl_syntax:variable("Ref"), erl_syntax:atom(Fun),
+                            erl_syntax:list(Arg)]
+                    ),
                     Clause = erl_syntax:clause(Pattern, [], [Body]),
                     erl_syntax:function(erl_syntax:atom(Fun), [Clause])
-                end || {Fun, UseCID, Arity} <- Calls ],
+                end || {Fun, Arity} <- Calls ],
 
     Code0 = erl_prettypr:format(erl_syntax:form_list(lists:flatten([
                 license(),
@@ -131,15 +117,13 @@ call_to_fun([], Acc) ->
     lists:reverse(Acc);
 call_to_fun([H|T], Acc) ->
     [Fun, Arity] = binary:split(H, <<"/">>),
-    {Name, UseCID} = case Fun of
-        <<"lxc_container_new">> ->
-            {<<"new">>, false};
+    Name = case Fun of
         <<"lxc_container_", Rest/binary>> ->
-            {Rest, true};
+            Rest;
         _ ->
-            {Fun, false}
+            Fun
     end,
-    call_to_fun(T, [{binary_to_list(Name), UseCID, binary_to_integer(Arity)}|Acc]).
+    call_to_fun(T, [{binary_to_list(Name), binary_to_integer(Arity)}|Acc]).
 
 static_exports() ->
     [{list,1},
