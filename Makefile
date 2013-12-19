@@ -1,4 +1,5 @@
 REBAR=$(shell which rebar || echo ./rebar)
+DEPSOLVER_PLT=$(CURDIR)/.depsolver_plt
 
 all: compile
 
@@ -24,4 +25,14 @@ examples: eg
 eg:
 	@erlc -I deps -o ebin examples/*.erl
 
-.PHONY: test
+.PHONY: test dialyzer typer
+
+$(DEPSOLVER_PLT):
+	dialyzer --output_plt $(DEPSOLVER_PLT) --build_plt \
+		--apps erts kernel stdlib crypto compile -r deps
+
+dialyzer: $(DEPSOLVER_PLT)
+	dialyzer --plt $(DEPSOLVER_PLT) -Wrace_conditions --src src
+
+typer: $(DEPSOLVER_PLT)
+	typer --plt $(DEPSOLVER_PLT) -r ./src
