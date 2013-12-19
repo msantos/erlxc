@@ -5,6 +5,7 @@ lxc_container_new/2
 lxc_container_start/3
 lxc_container_stop/1
 lxc_container_get_keys/2
+lxc_container_config_file_name/1
 lxc_container_clear_config/1
 lxc_container_clear_config_item/2
 lxc_container_get_config_item/2
