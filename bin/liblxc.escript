@@ -204,7 +204,7 @@ call(Pid, Command) ->
 ";
 static({call,3}) ->
 "
-call(Pid, Command, Arg) when is_pid(Pid) ->
+call(Pid, Command, Arg) when is_pid(Pid), is_list(Arg) ->
     erlxc_drv:call(Pid, erlxc_drv:encode(command(Command), Arg)).
 ".
 
