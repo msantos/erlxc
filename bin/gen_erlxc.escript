@@ -1,10 +1,10 @@
 #!/usr/bin/env escript
 
 %%%
-%%% Generate the erlxc.erl file
+%%% Generate the liblxc.erl file
 %%%
 main([]) ->
-    File = "erlxc.erl",
+    File = "liblxc.erl",
     Proto = "c_src/erlxc_cmd.proto",
     main([File, Proto]);
 
@@ -47,7 +47,7 @@ mkerl(File, Proto) ->
             erl_syntax:atom(module),
             [erl_syntax:atom(filename:basename(File, ".erl"))]
             ),
-%    Includes = includes(["erlxc.hrl"]),
+%    Includes = includes(["liblxc.hrl"]),
 
     % Any hardcoded functions will be included here
     Static = erl_syntax:comment(["%__STATIC__%%"]),
@@ -73,22 +73,20 @@ mkerl(File, Proto) ->
     Functions = [ begin
                     {Pattern, Body} = case UseCID of
                         true ->
-                            % name(Ref, Container, ...) -> erlxc:call(Ref, Fun, [Container, ...])
+                            % name(Ref, Container, ...) -> call(Ref, Fun, [Container, ...])
                             Arg = arg("Arg", Arity-1),
                             P = [erl_syntax:variable("Ref"), erl_syntax:variable("Container")|Arg],
                             B = erl_syntax:application(
-                                    erl_syntax:atom(erlxc),
                                     erl_syntax:atom(call),
                                     [erl_syntax:variable("Ref"), erl_syntax:atom(Fun),
                                        erl_syntax:list([erl_syntax:variable("Container")|Arg])]),
                             {P,B};
 
                         false ->
-                            % name(Ref, Container, ...) -> erlxc:call(Ref, Fun, [...])
+                            % name(Ref, Container, ...) -> liblxc:call(Ref, Fun, [...])
                             Arg = arg("Arg", Arity),
                             P = [erl_syntax:variable("Ref")|Arg],
                             B = erl_syntax:application(
-                                    erl_syntax:atom(erlxc),
                                     erl_syntax:atom(call),
                                     [erl_syntax:variable("Ref"), erl_syntax:atom(Fun),
                                        erl_syntax:list(Arg)]),
