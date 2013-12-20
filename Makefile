@@ -32,7 +32,7 @@ $(DEPSOLVER_PLT):
 		--apps erts kernel stdlib crypto compile -r deps
 
 dialyzer: $(DEPSOLVER_PLT)
-	dialyzer --plt $(DEPSOLVER_PLT) -Wrace_conditions --src src
+	@dialyzer --plt $(DEPSOLVER_PLT) -Wrace_conditions --src src
 
 typer: $(DEPSOLVER_PLT)
-	typer --plt $(DEPSOLVER_PLT) -r ./src
+	@typer --plt $(DEPSOLVER_PLT) -r ./src
