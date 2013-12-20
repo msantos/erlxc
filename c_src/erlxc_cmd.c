@@ -215,7 +215,6 @@ erlxc_lxc_container_init_pid(erlxc_state_t *ep, ETERM *arg)
     return erlxc_tuple2(erl_mk_atom("ok"), erl_mk_int(pid));
 
 BADARG:
-    lxc_container_put(c);
     return erl_mk_atom("badarg");
 }
 
