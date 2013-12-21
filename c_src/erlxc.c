@@ -29,6 +29,7 @@ main(int argc, char *argv[])
     erlxc_state_t *ep = NULL;
     char *name = NULL;
     char *path = NULL;
+    char *errlog = NULL;
     int ch = 0;
 
     erl_init(NULL, 0);
@@ -37,8 +38,13 @@ main(int argc, char *argv[])
     if (!ep)
         return -1;
 
-    while ( (ch = getopt(argc, argv, "n:p:v")) != -1) {
+    while ( (ch = getopt(argc, argv, "e:n:p:v")) != -1) {
         switch (ch) {
+            case 'e':
+                errlog = strdup(optarg);
+                if (!errlog)
+                    erl_err_sys("errlog");
+                break;
             case 'n':
                 name = strdup(optarg);
                 if (!name)
@@ -59,6 +65,11 @@ main(int argc, char *argv[])
 
     if (!name)
         usage(ep);
+
+    if (errlog) {
+        if (!freopen(errlog, "w+", stderr))
+            erl_err_sys("freopen");
+    }
 
     ep->c = lxc_container_new(name, path);
     if (!ep->c)
@@ -100,6 +111,8 @@ erlxc_loop(erlxc_state_t *ep)
             erl_err_sys("erlxc_write");
 
         erl_free_compound(arg);
+
+        (void)fflush(stderr);
     }
 }
 
@@ -205,6 +218,7 @@ usage(erlxc_state_t *ep)
     (void)fprintf(stderr,
             "usage: %s -n <name> <options>\n"
             "    -n               container name\n"
+            "    -e               error log\n"
             "    -p               LXC path\n"
             "    -v               verbose mode\n",
             __progname

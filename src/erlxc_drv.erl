@@ -116,6 +116,7 @@ getopts(Options) when is_list(Options) ->
 
 optarg({name, Arg})         -> switch("n", Arg);
 optarg({path, Arg})         -> switch("p", Arg);
+optarg({errlog, Arg})       -> switch("e", Arg);
 optarg({verbose, Arg})      -> string:copies("-v ", Arg);
 optarg(_)                   -> "".
 
