@@ -62,7 +62,7 @@ name(Ref, Container) ->
 
 config_file_name(Ref, Container) ->
     Reply = liblxc:config_file_name(Ref, Container),
-    ?_assertMatch({ok, _}, Reply).
+    ?_assertEqual(true, is_binary(Reply)).
 
 get_keys(Ref, Container) ->
     {ok, Bin} = liblxc:get_keys(Ref, Container),

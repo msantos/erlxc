@@ -169,10 +169,6 @@ erlxc_lxc_container_start(erlxc_state_t *ep, ETERM *arg)
     int errnum = 0;
     pid_t pid = -1;
 
-    char *config_file_name = NULL;
-
-    // bool (*start)(struct lxc_container *c, int useinit, char * const argv[]);
-
     /* cid */
     arg = erlxc_list_head(&hd, arg);
     if (!hd)
@@ -200,9 +196,6 @@ erlxc_lxc_container_start(erlxc_state_t *ep, ETERM *arg)
             goto BADARG;
         (void)fprintf(stderr, "argv=%p, len=%d", argv, erl_length(hd));
     }
-
-    config_file_name = c->config_file_name(c);
-    VERBOSE(2, "start: name=%s, useinit=%d, config_file_name=%s", c->name, useinit, config_file_name);
 
     if (!lxc_container_get(c))
         goto BADARG;
@@ -370,7 +363,12 @@ erlxc_lxc_container_config_file_name(erlxc_state_t *ep, ETERM *arg)
         return erlxc_errno(EINVAL);
 
     name = c->config_file_name(c);
-    return (name ? erlxc_tuple2(erl_mk_atom("ok"), erl_mk_binary(name, strlen(name))) : erlxc_errno(errno)); 
+    if (!name)
+        return erl_mk_binary("",0);
+
+    free(name);
+
+    return erl_mk_binary(name, strlen(name));
 
 BADARG:
     return erl_mk_atom("badarg");
