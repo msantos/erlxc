@@ -36,6 +36,7 @@ run(Ref) ->
         list(Ref, active),
         list(Ref, all),
         list(Ref, defined),
+        name(Ref, Container),
         config_file_name(Ref, Container),
         get_keys(Ref, Container),
         get_config_item(Ref, Container),
@@ -53,6 +54,10 @@ stop(Ref) ->
 list(Ref, Type) ->
     Reply = liblxc:list(Ref, Type),
     ?_assertMatch({ok, _}, Reply).
+
+name(Ref, Container) ->
+    Reply = liblxc:name(Ref, Container),
+    ?_assertEqual(<<"erlxc">>, Reply).
 
 config_file_name(Ref, Container) ->
     Reply = liblxc:config_file_name(Ref, Container),

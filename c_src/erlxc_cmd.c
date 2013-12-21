@@ -99,6 +99,26 @@ BADARG:
 }
 
     static ETERM *
+erlxc_lxc_container_name(erlxc_state_t *ep, ETERM *arg)
+{
+    ETERM *hd = NULL;
+    struct lxc_container *c = NULL;
+
+    arg = erlxc_list_head(&hd, arg);
+    if (!hd)
+        goto BADARG;
+
+    c = erlxc_cid(ep, ERL_INT_VALUE(hd));
+    if (!c)
+        return erlxc_errno(EINVAL);
+
+    return (c->name ? erl_mk_binary(c->name, strlen(c->name)) : erl_mk_binary("", 0));
+
+BADARG:
+    return erl_mk_atom("badarg");
+}
+
+    static ETERM *
 erlxc_lxc_container_defined(erlxc_state_t *ep, ETERM *arg)
 {
     ETERM *hd = NULL;
