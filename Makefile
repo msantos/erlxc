@@ -25,14 +25,17 @@ examples: eg
 eg:
 	@erlc -I deps -o ebin examples/*.erl
 
-.PHONY: test dialyzer typer
+.PHONY: test dialyzer typer clean distclean
 
 $(DEPSOLVER_PLT):
-	dialyzer --output_plt $(DEPSOLVER_PLT) --build_plt \
-		--apps erts kernel stdlib crypto compile -r deps
+	@dialyzer --output_plt $(DEPSOLVER_PLT) --build_plt \
+		--apps erts kernel stdlib crypto
 
 dialyzer: $(DEPSOLVER_PLT)
 	@dialyzer --plt $(DEPSOLVER_PLT) -Wrace_conditions --src src
 
 typer: $(DEPSOLVER_PLT)
 	@typer --plt $(DEPSOLVER_PLT) -r ./src
+
+distclean: clean
+	@rm $(DEPSOLVER_PLT)

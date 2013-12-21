@@ -5,3 +5,6 @@ deps/
 *.beam
 *.swp
 .eunit/
+.depsolver_plt
+c_src/erlxc_cmd.h
+src/liblxc.erl
