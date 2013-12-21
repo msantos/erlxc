@@ -18,5 +18,6 @@ lxc_container_set_config_item/2
 lxc_container_set_config_path/1
 lxc_container_shutdown/1
 lxc_container_start/2
+lxc_container_state/0
 lxc_container_stop/0
 test_argv/1

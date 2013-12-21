@@ -61,6 +61,20 @@ erlxc_lxc_container_name(erlxc_state_t *ep, ETERM *arg)
 }
 
     static ETERM *
+erlxc_lxc_container_state(erlxc_state_t *ep, ETERM *arg)
+{
+    struct lxc_container *c = ep->c;
+    const char *state = NULL;
+
+    if (!c)
+        return erlxc_errno(EINVAL);
+
+    state = c->state(c);
+
+    return (state ? erl_mk_binary(state, strlen(state)) : erl_mk_binary("",0));
+}
+
+    static ETERM *
 erlxc_lxc_container_defined(erlxc_state_t *ep, ETERM *arg)
 {
     struct lxc_container *c = ep->c;

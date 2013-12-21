@@ -35,6 +35,7 @@ runit(Container) ->
         create(Container),
 
         defined(Container),
+        state(Container),
 
         list(Container, active),
         list(Container, all),
@@ -123,6 +124,10 @@ clear_config_item(Container) ->
     ok = liblxc:clear_config_item(Container, <<"lxc.network">>),
     Reply = liblxc:get_config_item(Container, <<"lxc.network">>),
     ?_assertEqual({error,none}, Reply).
+
+state(Container) ->
+    Reply = liblxc:state(Container),
+    ?_assertEqual(<<"STOPPED">>, Reply).
 
 defined(Container) ->
     Reply = liblxc:defined(Container),
