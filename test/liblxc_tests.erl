@@ -41,7 +41,8 @@ run(Ref) ->
         get_keys(Ref, Container),
         get_config_item(Ref, Container),
         clear_config_item(Ref, Container),
-        defined(Ref)
+        defined(Ref),
+        running(Ref, Container)
     ].
 
 start() ->
@@ -83,4 +84,8 @@ clear_config_item(Ref, Container) ->
 defined(Ref) ->
     {ok, Container} = liblxc:new(Ref, <<"notexist">>),
     Reply = liblxc:defined(Ref, Container),
+    ?_assertEqual(false, Reply).
+
+running(Ref, Container) ->
+    Reply = liblxc:running(Ref, Container),
     ?_assertEqual(false, Reply).
