@@ -248,6 +248,37 @@ BADARG:
 }
 
     static ETERM *
+erlxc_lxc_container_shutdown(erlxc_state_t *ep, ETERM *arg)
+{
+    ETERM *hd = NULL;
+    struct lxc_container *c = NULL;
+    int timeout = -1;
+
+    /* container */
+    arg = erlxc_list_head(&hd, arg);
+    if (!hd)
+        goto BADARG;
+
+    c = erlxc_cid(ep, ERL_INT_VALUE(hd));
+    if (!c)
+        return erlxc_errno(EINVAL);
+
+    /* timeout */
+    arg = erlxc_list_head(&hd, arg);
+    if (!hd)
+        goto BADARG;
+
+    timeout = ERL_INT_VALUE(hd);
+    if (timeout < 0)
+        goto BADARG;
+
+    return (c->shutdown(c, timeout) ? erl_mk_atom("true") : erl_mk_atom("false"));
+
+BADARG:
+    return erl_mk_atom("badarg");
+}
+
+    static ETERM *
 erlxc_lxc_container_init_pid(erlxc_state_t *ep, ETERM *arg)
 {
     ETERM *hd = NULL;
