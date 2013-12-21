@@ -71,12 +71,12 @@ mkerl(File, Proto) ->
 
     % Generate the functions
     Functions = [ begin
-                    % name(Ref, Container, ...) -> liblxc:call(Ref, Fun, [...])
+                    % name(Container, ...) -> liblxc:call(Container, Fun, [...])
                     Arg = arg("Arg", Arity),
-                    Pattern = [erl_syntax:variable("Ref")|Arg],
+                    Pattern = [erl_syntax:variable("Container")|Arg],
                     Body = erl_syntax:application(
                         erl_syntax:atom(call),
-                        [erl_syntax:variable("Ref"), erl_syntax:atom(Fun),
+                        [erl_syntax:variable("Container"), erl_syntax:atom(Fun),
                             erl_syntax:list(Arg)]
                     ),
                     Clause = erl_syntax:clause(Pattern, [], [Body]),
@@ -129,10 +129,9 @@ static_exports() ->
     [{list,1},
      {list,2},
      {list,3},
-     {new,2},
-     {load_config,2},
-     {start,2},
-     {get_keys,2},
+     {load_config,1},
+     {start,1},
+     {get_keys,1},
      {command,1},
      {call,2},
      {call,3}].
@@ -142,45 +141,39 @@ static() ->
 
 static({list,1}) ->
 "
-list(Ref) ->
-    list(Ref, all).
+list(Container) ->
+    list(Container, all).
 ";
 
 static({list,2}) ->
 "
-list(Ref, Type) ->
-    list(Ref, Type, [<<>>]).
+list(Container, Type) ->
+    list(Container, Type, [<<>>]).
 ";
 
 static({list,3}) ->
 "
-list(Ref, Type, Path) when Type =:= all; Type =:= active; Type =:= defined ->
+list(Container, Type, Path) when Type =:= all; Type =:= active; Type =:= defined ->
     Cmd = \"list_\" ++ atom_to_list(Type) ++ \"_containers\",
-    call(Ref, list_to_atom(Cmd), [Path]).
+    call(Container, list_to_atom(Cmd), [Path]).
 ";
 
-static({new,2}) ->
+static({load_config,1}) ->
 "
-new(Ref, Name) ->
-    new(Ref, Name, <<>>).
+load_config(Container) ->
+    load_config(Container, <<>>).
 ";
 
-static({load_config,2}) ->
+static({start,1}) ->
 "
-load_config(Ref, Container) ->
-    load_config(Ref, Container, <<>>).
+start(Container) ->
+    start(Container, 0, []).
 ";
 
-static({start,2}) ->
+static({get_keys,1}) ->
 "
-start(Ref, Container) ->
-    start(Ref, Container, 0, []).
-";
-
-static({get_keys,2}) ->
-"
-get_keys(Ref, Container) ->
-    get_keys(Ref, Container, <<>>).
+get_keys(Container) ->
+    get_keys(Container, <<>>).
 ";
 
 static({command,1}) ->

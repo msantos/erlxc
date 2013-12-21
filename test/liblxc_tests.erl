@@ -31,24 +31,23 @@ erlxc_test_() ->
     }.
 
 run(Ref) ->
-    {ok, Container} = liblxc:new(Ref, <<"erlxc">>),
     [
         list(Ref, active),
         list(Ref, all),
         list(Ref, defined),
-        name(Ref, Container),
-        config_file_name(Ref, Container),
-        get_keys(Ref, Container),
-        get_config_item(Ref, Container),
-        clear_config_item(Ref, Container),
+        name(Ref),
+        config_file_name(Ref),
+        ?MODULE:get_keys(Ref),
+        get_config_item(Ref),
+        clear_config_item(Ref),
         defined(Ref),
-        running(Ref, Container),
-        get_config_path(Ref, Container),
-        set_config_path(Ref, Container)
+        running(Ref),
+        get_config_path(Ref),
+        set_config_path(Ref)
     ].
 
 start() ->
-    {ok, Ref} = erlxc_drv:start(),
+    {ok, Ref} = erlxc_drv:start([{name, <<"erlxc">>}]),
     Ref.
 
 stop(Ref) ->
@@ -58,45 +57,44 @@ list(Ref, Type) ->
     Reply = liblxc:list(Ref, Type),
     ?_assertMatch({ok, _}, Reply).
 
-name(Ref, Container) ->
-    Reply = liblxc:name(Ref, Container),
+name(Ref) ->
+    Reply = liblxc:name(Ref),
     ?_assertEqual(<<"erlxc">>, Reply).
 
-config_file_name(Ref, Container) ->
-    Reply = liblxc:config_file_name(Ref, Container),
+config_file_name(Ref) ->
+    Reply = liblxc:config_file_name(Ref),
     ?_assertEqual(true, is_binary(Reply)).
 
-get_keys(Ref, Container) ->
-    {ok, Bin} = liblxc:get_keys(Ref, Container),
+get_keys(Ref) ->
+    {ok, Bin} = liblxc:get_keys(Ref),
     Keys = binary:split(Bin, <<"\n">>, [global,trim]),
     Exists = lists:member(<<"lxc.utsname">>, Keys),
     ?_assertEqual(true, Exists).
 
-get_config_item(Ref, Container) ->
-    Reply = liblxc:get_config_item(Ref, Container, <<"lxc.utsname">>),
+get_config_item(Ref) ->
+    Reply = liblxc:get_config_item(Ref, <<"lxc.utsname">>),
     ?_assertMatch({ok, <<"erlxc">>}, Reply).
 
-clear_config_item(Ref, Container) ->
-    {ok, _} = liblxc:get_config_item(Ref, Container, <<"lxc.network">>),
-    ok = liblxc:clear_config_item(Ref, Container, <<"lxc.network">>),
-    ok = liblxc:clear_config_item(Ref, Container, <<"lxc.network">>),
-    Reply = liblxc:get_config_item(Ref, Container, <<"lxc.network">>),
+clear_config_item(Ref) ->
+    {ok, _} = liblxc:get_config_item(Ref, <<"lxc.network">>),
+    ok = liblxc:clear_config_item(Ref, <<"lxc.network">>),
+    ok = liblxc:clear_config_item(Ref, <<"lxc.network">>),
+    Reply = liblxc:get_config_item(Ref, <<"lxc.network">>),
     ?_assertEqual({error,none}, Reply).
 
 defined(Ref) ->
-    {ok, Container} = liblxc:new(Ref, <<"notexist">>),
-    Reply = liblxc:defined(Ref, Container),
+    Reply = liblxc:defined(Ref),
+    ?_assertEqual(true, Reply).
+
+running(Ref) ->
+    Reply = liblxc:running(Ref),
     ?_assertEqual(false, Reply).
 
-running(Ref, Container) ->
-    Reply = liblxc:running(Ref, Container),
-    ?_assertEqual(false, Reply).
-
-get_config_path(Ref, Container) ->
-    Reply = liblxc:get_config_path(Ref, Container),
+get_config_path(Ref) ->
+    Reply = liblxc:get_config_path(Ref),
     ?_assertEqual(true, is_binary(Reply)).
 
-set_config_path(Ref, Container) ->
-    Path = liblxc:get_config_path(Ref, Container),
-    Reply = liblxc:set_config_path(Ref, Container, Path),
+set_config_path(Ref) ->
+    Path = liblxc:get_config_path(Ref),
+    Reply = liblxc:set_config_path(Ref, Path),
     ?_assertEqual(ok, Reply).

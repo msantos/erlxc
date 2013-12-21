@@ -19,8 +19,6 @@
 #include "erlxc.h"
 #include "erlxc_cmd.h"
 
-static struct lxc_container *erlxc_cid(erlxc_state_t *, int);
-
 static char **erlxc_list_to_argv(ETERM *);
 static void erlxc_free_argv(char **);
 static ETERM *erlxc_list_containers(erlxc_state_t *, ETERM *,
@@ -52,121 +50,43 @@ erlxc_cmd(erlxc_state_t *ep, u_int32_t cmd, ETERM *arg)
 }
 
     static ETERM *
-erlxc_lxc_container_new(erlxc_state_t *ep, ETERM *arg)
-{
-    ETERM *hd = NULL;
-    struct lxc_container *c = NULL;
-    char *name = NULL;
-    char *path = NULL;
-
-    if (ep->cur >= ep->max)
-        return erlxc_errno(EMFILE);
-
-    arg = erlxc_list_head(&hd, arg);
-
-    if (!hd)
-        goto BADARG;
-
-    if (erl_iolist_length(hd) == 0)
-        goto BADARG;
-
-    name = erl_iolist_to_string(hd);
-    if (!name)
-        goto BADARG;
-
-    arg = erlxc_list_head(&hd, arg);
-    if (!hd)
-        goto BADARG;
-
-    if (erl_iolist_length(hd) > 0) {
-        path = erl_iolist_to_string(hd);
-        if (!path)
-            goto BADARG;
-    }
-
-    c = lxc_container_new(name, path);
-
-    if (!c)
-        goto BADARG;
-
-    erl_free(name);
-    erl_free(path);
-
-    ep->c[ep->cur] = c;
-
-    return erlxc_ok(erl_mk_uint(ep->cur++));
-
-BADARG:
-    erl_free(name);
-    erl_free(path);
-    return erl_mk_atom("badarg");
-}
-
-    static ETERM *
 erlxc_lxc_container_name(erlxc_state_t *ep, ETERM *arg)
 {
-    ETERM *hd = NULL;
-    struct lxc_container *c = NULL;
+    struct lxc_container *c = ep->c;
 
-    arg = erlxc_list_head(&hd, arg);
-    if (!hd)
-        goto BADARG;
-
-    c = erlxc_cid(ep, ERL_INT_VALUE(hd));
     if (!c)
         return erlxc_errno(EINVAL);
 
     return (c->name ? erl_mk_binary(c->name, strlen(c->name)) : erl_mk_binary("", 0));
-
-BADARG:
-    return erl_mk_atom("badarg");
 }
 
     static ETERM *
 erlxc_lxc_container_defined(erlxc_state_t *ep, ETERM *arg)
 {
-    ETERM *hd = NULL;
-    struct lxc_container *c = NULL;
+    struct lxc_container *c = ep->c;
 
-    arg = erlxc_list_head(&hd, arg);
-    if (!hd)
-        goto BADARG;
-
-    c = erlxc_cid(ep, ERL_INT_VALUE(hd));
     if (!c)
         return erlxc_errno(EINVAL);
 
     return (c->is_defined(c) ? erl_mk_atom("true") : erl_mk_atom("false"));
-
-BADARG:
-    return erl_mk_atom("badarg");
 }
 
     static ETERM *
 erlxc_lxc_container_running(erlxc_state_t *ep, ETERM *arg)
 {
-    ETERM *hd = NULL;
-    struct lxc_container *c = NULL;
+    struct lxc_container *c = ep->c;
 
-    arg = erlxc_list_head(&hd, arg);
-    if (!hd)
-        goto BADARG;
-
-    c = erlxc_cid(ep, ERL_INT_VALUE(hd));
     if (!c)
         return erlxc_errno(EINVAL);
 
     return (c->is_running(c) ? erl_mk_atom("true") : erl_mk_atom("false"));
-
-BADARG:
-    return erl_mk_atom("badarg");
 }
 
     static ETERM *
 erlxc_lxc_container_create(erlxc_state_t *ep, ETERM *arg)
 {
     ETERM *hd = NULL;
-    struct lxc_container *c = NULL;
+    struct lxc_container *c = ep->c;
     char *t = NULL;
     char *bdevtype = NULL;
     struct bdev_specs *specs = NULL;
@@ -176,12 +96,6 @@ erlxc_lxc_container_create(erlxc_state_t *ep, ETERM *arg)
     int fdnull = -1;
     bool res;
 
-    /* container */
-    arg = erlxc_list_head(&hd, arg);
-    if (!hd)
-        goto BADARG;
-
-    c = erlxc_cid(ep, ERL_INT_VALUE(hd));
     if (!c)
         return erlxc_errno(EINVAL);
 
@@ -255,40 +169,25 @@ BADARG:
     static ETERM *
 erlxc_lxc_container_destroy(erlxc_state_t *ep, ETERM *arg)
 {
-    ETERM *hd = NULL;
-    struct lxc_container *c = NULL;
+    struct lxc_container *c = ep->c;
 
-    arg = erlxc_list_head(&hd, arg);
-    if (!hd)
-        goto BADARG;
-
-    c = erlxc_cid(ep, ERL_INT_VALUE(hd));
     if (!c)
         return erlxc_errno(EINVAL);
 
     return (c->destroy(c) ? erl_mk_atom("true") : erl_mk_atom("false"));
-
-BADARG:
-    return erl_mk_atom("badarg");
 }
 
     static ETERM *
 erlxc_lxc_container_start(erlxc_state_t *ep, ETERM *arg)
 {
     ETERM *hd = NULL;
-    struct lxc_container *c = NULL;
+    struct lxc_container *c = ep->c;
     int useinit = 0;
     char **argv = NULL;
     bool res;
     int errnum = 0;
     pid_t pid = -1;
 
-    /* cid */
-    arg = erlxc_list_head(&hd, arg);
-    if (!hd)
-        goto BADARG;
-
-    c = erlxc_cid(ep, ERL_INT_VALUE(hd));
     if (!c)
         return erlxc_errno(EINVAL);
 
@@ -335,16 +234,10 @@ BADARG:
     static ETERM *
 erlxc_lxc_container_stop(erlxc_state_t *ep, ETERM *arg)
 {
-    ETERM *hd = NULL;
-    struct lxc_container *c = NULL;
+    struct lxc_container *c = ep->c;
     bool res;
     int errnum = 0;
 
-    arg = erlxc_list_head(&hd, arg);
-    if (!hd)
-        goto BADARG;
-
-    c = erlxc_cid(ep, ERL_INT_VALUE(hd));
     if (!c)
         return erlxc_errno(EINVAL);
 
@@ -354,25 +247,15 @@ erlxc_lxc_container_stop(erlxc_state_t *ep, ETERM *arg)
 
     lxc_container_put(c);
     return (res ? erl_mk_atom("ok") : erlxc_errno(errnum));
-
-BADARG:
-    lxc_container_put(c);
-    return erl_mk_atom("badarg");
 }
 
     static ETERM *
 erlxc_lxc_container_shutdown(erlxc_state_t *ep, ETERM *arg)
 {
     ETERM *hd = NULL;
-    struct lxc_container *c = NULL;
+    struct lxc_container *c = ep->c;
     int timeout = -1;
 
-    /* container */
-    arg = erlxc_list_head(&hd, arg);
-    if (!hd)
-        goto BADARG;
-
-    c = erlxc_cid(ep, ERL_INT_VALUE(hd));
     if (!c)
         return erlxc_errno(EINVAL);
 
@@ -394,15 +277,9 @@ BADARG:
     static ETERM *
 erlxc_lxc_container_init_pid(erlxc_state_t *ep, ETERM *arg)
 {
-    ETERM *hd = NULL;
-    struct lxc_container *c = NULL;
+    struct lxc_container *c = ep->c;
     pid_t pid = -1;
 
-    arg = erlxc_list_head(&hd, arg);
-    if (!hd)
-        goto BADARG;
-
-    c = erlxc_cid(ep, ERL_INT_VALUE(hd));
     if (!c)
         return erlxc_errno(EINVAL);
 
@@ -410,23 +287,15 @@ erlxc_lxc_container_init_pid(erlxc_state_t *ep, ETERM *arg)
 
     /* XXX overflow pid_t -> int */
     return erlxc_tuple2(erl_mk_atom("ok"), erl_mk_int(pid));
-
-BADARG:
-    return erl_mk_atom("badarg");
 }
 
     static ETERM *
 erlxc_lxc_container_load_config(erlxc_state_t *ep, ETERM *arg)
 {
     ETERM *hd = NULL;
-    struct lxc_container *c = NULL;
+    struct lxc_container *c = ep->c;
     char *path = NULL;
 
-    arg = erlxc_list_head(&hd, arg);
-    if (!hd)
-        goto BADARG;
-
-    c = erlxc_cid(ep, ERL_INT_VALUE(hd));
     if (!c)
         return erlxc_errno(EINVAL);
 
@@ -450,17 +319,12 @@ BADARG:
 erlxc_lxc_container_get_keys(erlxc_state_t *ep, ETERM *arg)
 {
     ETERM *hd = NULL;
-    struct lxc_container *c = NULL;
+    struct lxc_container *c = ep->c;
     char *key = NULL;
     char buf[2048] = {0};
     int n = 0;
     int len = 0;
 
-    arg = erlxc_list_head(&hd, arg);
-    if (!hd)
-        goto BADARG;
-
-    c = erlxc_cid(ep, ERL_INT_VALUE(hd));
     if (!c)
         return erlxc_errno(EINVAL);
 
@@ -494,15 +358,9 @@ BADARG:
     static ETERM *
 erlxc_lxc_container_config_file_name(erlxc_state_t *ep, ETERM *arg)
 {
-    ETERM *hd = NULL;
-    struct lxc_container *c = NULL;
+    struct lxc_container *c = ep->c;
     char *name = NULL;
 
-    arg = erlxc_list_head(&hd, arg);
-    if (!hd)
-        goto BADARG;
-
-    c = erlxc_cid(ep, ERL_INT_VALUE(hd));
     if (!c)
         return erlxc_errno(EINVAL);
 
@@ -513,46 +371,29 @@ erlxc_lxc_container_config_file_name(erlxc_state_t *ep, ETERM *arg)
     free(name);
 
     return erl_mk_binary(name, strlen(name));
-
-BADARG:
-    return erl_mk_atom("badarg");
 }
 
     static ETERM *
 erlxc_lxc_container_clear_config(erlxc_state_t *ep, ETERM *arg)
 {
-    ETERM *hd = NULL;
-    struct lxc_container *c = NULL;
+    struct lxc_container *c = ep->c;
 
-    arg = erlxc_list_head(&hd, arg);
-    if (!hd)
-        goto BADARG;
-
-    c = erlxc_cid(ep, ERL_INT_VALUE(hd));
     if (!c)
         return erlxc_errno(EINVAL);
 
     c->clear_config(c);
     return erl_mk_atom("ok");
-
-BADARG:
-    return erl_mk_atom("badarg");
 }
 
     static ETERM *
 erlxc_lxc_container_clear_config_item(erlxc_state_t *ep, ETERM *arg)
 {
     ETERM *hd = NULL;
-    struct lxc_container *c = NULL;
+    struct lxc_container *c = ep->c;
     char *key = NULL;
     bool res;
     int errnum = 0;
 
-    arg = erlxc_list_head(&hd, arg);
-    if (!hd)
-        goto BADARG;
-
-    c = erlxc_cid(ep, ERL_INT_VALUE(hd));
     if (!c)
         return erlxc_errno(EINVAL);
 
@@ -584,17 +425,12 @@ BADARG:
 erlxc_lxc_container_get_config_item(erlxc_state_t *ep, ETERM *arg)
 {
     ETERM *hd = NULL;
-    struct lxc_container *c = NULL;
+    struct lxc_container *c = ep->c;
     char *key = NULL;
     char *buf = NULL;
     int n = 0;
     ETERM *res = NULL;
 
-    arg = erlxc_list_head(&hd, arg);
-    if (!hd)
-        goto BADARG;
-
-    c = erlxc_cid(ep, ERL_INT_VALUE(hd));
     if (!c)
         return erlxc_errno(EINVAL);
 
@@ -643,17 +479,12 @@ BADARG:
 erlxc_lxc_container_set_config_item(erlxc_state_t *ep, ETERM *arg)
 {
     ETERM *hd = NULL;
-    struct lxc_container *c = NULL;
+    struct lxc_container *c = ep->c;
     char *key = NULL;
     char *val = NULL;
     bool res;
     int errnum = 0;
 
-    arg = erlxc_list_head(&hd, arg);
-    if (!hd)
-        goto BADARG;
-
-    c = erlxc_cid(ep, ERL_INT_VALUE(hd));
     if (!c)
         return erlxc_errno(EINVAL);
 
@@ -698,15 +529,9 @@ BADARG:
     static ETERM *
 erlxc_lxc_container_get_config_path(erlxc_state_t *ep, ETERM *arg)
 {
-    ETERM *hd = NULL;
-    struct lxc_container *c = NULL;
+    struct lxc_container *c = ep->c;
     const char *path = NULL;
 
-    arg = erlxc_list_head(&hd, arg);
-    if (!hd)
-        goto BADARG;
-
-    c = erlxc_cid(ep, ERL_INT_VALUE(hd));
     if (!c)
         return erlxc_errno(EINVAL);
 
@@ -716,23 +541,15 @@ erlxc_lxc_container_get_config_path(erlxc_state_t *ep, ETERM *arg)
         return erl_mk_binary("",0);
 
     return erl_mk_binary(path, strlen(path));
-
-BADARG:
-    return erl_mk_atom("badarg");
 }
 
     static ETERM *
 erlxc_lxc_container_set_config_path(erlxc_state_t *ep, ETERM *arg)
 {
     ETERM *hd = NULL;
-    struct lxc_container *c = NULL;
+    struct lxc_container *c = ep->c;
     char *path = NULL;
 
-    arg = erlxc_list_head(&hd, arg);
-    if (!hd)
-        goto BADARG;
-
-    c = erlxc_cid(ep, ERL_INT_VALUE(hd));
     if (!c)
         return erlxc_errno(EINVAL);
 
@@ -819,14 +636,6 @@ erlxc_list_containers(erlxc_state_t *ep, ETERM *arg,
 
 BADARG:
     return erl_mk_atom("badarg");
-}
-
-    static struct lxc_container *
-erlxc_cid(erlxc_state_t *ep, int cid)
-{
-    if (cid < 0 || cid > ep->max)
-        return NULL;
-    return ep->c[cid];
 }
 
     static ETERM *

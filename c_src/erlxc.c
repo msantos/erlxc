@@ -27,6 +27,8 @@ extern char *__progname;
 main(int argc, char *argv[])
 {
     erlxc_state_t *ep = NULL;
+    char *name = NULL;
+    char *path = NULL;
     int ch = 0;
 
     erl_init(NULL, 0);
@@ -35,14 +37,18 @@ main(int argc, char *argv[])
     if (!ep)
         return -1;
 
-    ep->c = calloc(LXCMAX, sizeof(struct lxc_container **));
-    if (!ep->c)
-        return -1;
-
-    ep->max = LXCMAX;
-
-    while ( (ch = getopt(argc, argv, "v")) != -1) {
+    while ( (ch = getopt(argc, argv, "n:p:v")) != -1) {
         switch (ch) {
+            case 'n':
+                name = strdup(optarg);
+                if (!name)
+                    erl_err_sys("name");
+                break;
+            case 'p':
+                path = strdup(optarg);
+                if (!path)
+                    erl_err_sys("path");
+                break;
             case 'v':
                 ep->verbose++;
                 break;
@@ -50,6 +56,13 @@ main(int argc, char *argv[])
                 usage(ep);
         }
     }
+
+    if (!name)
+        usage(ep);
+
+    ep->c = lxc_container_new(name, path);
+    if (!ep->c)
+        erl_err_quit("failed to create container");
 
     erlxc_loop(ep);
     exit(0);
@@ -185,10 +198,12 @@ erlxc_read(void *buf, ssize_t len)
     static void
 usage(erlxc_state_t *ep)
 {
-    (void)fprintf(stderr, "%s, %s\n", __progname, ERLXC_VERSION);
+    (void)fprintf(stderr, "%s %s\n", __progname, ERLXC_VERSION);
     (void)fprintf(stderr,
-            "usage: %s <options>\n"
-            "              -v               verbose mode\n",
+            "usage: %s -n <name> <options>\n"
+            "    -n               container name\n"
+            "    -p               LXC path\n"
+            "    -v               verbose mode\n",
             __progname
             );
 

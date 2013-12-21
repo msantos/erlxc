@@ -114,11 +114,15 @@ getopts(Options) when is_list(Options) ->
 
     string:join(Cmd, " ").
 
+optarg({name, Arg})         -> switch("n", Arg);
+optarg({path, Arg})         -> switch("p", Arg);
 optarg({verbose, Arg})      -> string:copies("-v ", Arg);
 optarg(_)                   -> "".
 
-%switch(Switch, Arg) ->
-%    lists:concat([Switch, " ", Arg]).
+switch(Switch, Arg) when is_binary(Arg) ->
+    switch(Switch, binary_to_list(Arg));
+switch(Switch, Arg) ->
+    lists:concat(["-", Switch, " ", Arg]).
 
 basedir(Module) ->
     case code:priv_dir(Module) of
