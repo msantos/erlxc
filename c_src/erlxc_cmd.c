@@ -689,32 +689,6 @@ BADARG:
     return erl_mk_atom("badarg");
 }
 
-    static ETERM *
-erlxc_test_argv(erlxc_state_t *ep, ETERM *arg)
-{
-    ETERM *hd = NULL;
-    char **argv = NULL;
-    int len = 0;
-    int i = 0;
-
-    arg = erlxc_list_head(&hd, arg);
-    if (!hd)
-        return erl_mk_atom("badarg");
-
-    len = erl_length(hd);
-    VERBOSE(0, "len=%d", len);
-
-    argv = erlxc_list_to_argv(hd);
-
-    if (!argv)
-        return erl_mk_atom("badarg");
-
-    for (i = 0; i < len; i++)
-        (void)fprintf(stderr, "arg[%d]=%s", i, argv[i]);
-
-    return erl_mk_atom("ok");
-}
-
     char **
 erlxc_list_to_argv(ETERM *arg)
 {
@@ -754,4 +728,33 @@ erlxc_free_argv(char **argv)
 
     for (i = 0; argv[i] != NULL; i++)
         erl_free(argv[i]);
+}
+
+/*
+ * For tests only
+ */
+    static ETERM *
+erlxc_test_argv(erlxc_state_t *ep, ETERM *arg)
+{
+    ETERM *hd = NULL;
+    char **argv = NULL;
+    int len = 0;
+    int i = 0;
+
+    arg = erlxc_list_head(&hd, arg);
+    if (!hd)
+        return erl_mk_atom("badarg");
+
+    len = erl_length(hd);
+    VERBOSE(0, "len=%d", len);
+
+    argv = erlxc_list_to_argv(hd);
+
+    if (!argv)
+        return erl_mk_atom("badarg");
+
+    for (i = 0; i < len; i++)
+        (void)fprintf(stderr, "arg[%d]=%s", i, argv[i]);
+
+    return erl_mk_atom("ok");
 }
