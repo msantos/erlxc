@@ -12,6 +12,10 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
 #include "erlxc.h"
 #include "erlxc_cmd.h"
 
@@ -159,6 +163,96 @@ BADARG:
 }
 
     static ETERM *
+erlxc_lxc_container_create(erlxc_state_t *ep, ETERM *arg)
+{
+    ETERM *hd = NULL;
+    struct lxc_container *c = NULL;
+    char *t = NULL;
+    char *bdevtype = NULL;
+    struct bdev_specs *specs = NULL;
+    int flags = 0;
+    char **argv = NULL;
+    int fdout = -1;
+    int fdnull = -1;
+    bool res;
+
+    /* container */
+    arg = erlxc_list_head(&hd, arg);
+    if (!hd)
+        goto BADARG;
+
+    c = erlxc_cid(ep, ERL_INT_VALUE(hd));
+    if (!c)
+        return erlxc_errno(EINVAL);
+
+    /* template */
+    arg = erlxc_list_head(&hd, arg);
+    if (!hd)
+        goto BADARG;
+
+    if (erl_iolist_length(hd) > 0)
+        t = erl_iolist_to_string(hd);
+
+    if (!t)
+        goto BADARG;
+
+    /* bdevtype */
+    arg = erlxc_list_head(&hd, arg);
+    if (!hd)
+        goto BADARG;
+
+    /* specs */
+    arg = erlxc_list_head(&hd, arg);
+    if (!hd)
+        goto BADARG;
+
+    /* flags */
+    arg = erlxc_list_head(&hd, arg);
+    if (!hd)
+        goto BADARG;
+
+    flags = ERL_INT_VALUE(hd);
+
+    /* argv */
+    arg = erlxc_list_head(&hd, arg);
+    if (!hd)
+        goto BADARG;
+
+    if (!ERL_IS_EMPTY_LIST(hd)) {
+        argv = erlxc_list_to_argv(hd);
+        if (!argv)
+            goto BADARG;
+    }
+
+    (void)fflush(stdout);
+    fdout = dup(STDOUT_FILENO);
+    fdnull = open("/dev/null", O_WRONLY);
+    (void)dup2(fdnull, STDOUT_FILENO);
+    (void)close(fdnull);
+
+    res = c->create(
+            c,
+            t,
+            bdevtype,
+            specs,
+            flags,
+            argv
+            );
+
+    (void)fflush(stdout);
+    (void)dup2(fdout, STDOUT_FILENO);
+    (void)close(fdout);
+
+    erlxc_free_argv(argv);
+
+    return (res ? erl_mk_atom("true") : erl_mk_atom("false"));
+
+BADARG:
+    erlxc_free_argv(argv);
+    return erl_mk_atom("badarg");
+}
+
+    static ETERM *
 erlxc_lxc_container_start(erlxc_state_t *ep, ETERM *arg)
 {
     ETERM *hd = NULL;
@@ -194,7 +288,6 @@ erlxc_lxc_container_start(erlxc_state_t *ep, ETERM *arg)
         argv = erlxc_list_to_argv(hd);
         if (!argv)
             goto BADARG;
-        (void)fprintf(stderr, "argv=%p, len=%d", argv, erl_length(hd));
     }
 
     if (!lxc_container_get(c))

@@ -2,6 +2,7 @@ list_active_containers/1
 list_all_containers/1
 list_defined_containers/1
 lxc_container_new/2
+lxc_container_create/6
 lxc_container_name/1
 lxc_container_defined/1
 lxc_container_running/1
