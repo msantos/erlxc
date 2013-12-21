@@ -39,7 +39,8 @@ run(Ref) ->
         config_file_name(Ref, Container),
         get_keys(Ref, Container),
         get_config_item(Ref, Container),
-        clear_config_item(Ref, Container)
+        clear_config_item(Ref, Container),
+        defined(Ref)
     ].
 
 start() ->
@@ -73,3 +74,8 @@ clear_config_item(Ref, Container) ->
     ok = liblxc:clear_config_item(Ref, Container, <<"lxc.network">>),
     Reply = liblxc:get_config_item(Ref, Container, <<"lxc.network">>),
     ?_assertEqual({error,none}, Reply).
+
+defined(Ref) ->
+    {ok, Container} = liblxc:new(Ref, <<"notexist">>),
+    Reply = liblxc:defined(Ref, Container),
+    ?_assertEqual(false, Reply).
