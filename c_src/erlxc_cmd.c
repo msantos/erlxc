@@ -235,18 +235,12 @@ BADARG:
 erlxc_lxc_container_stop(erlxc_state_t *ep, ETERM *arg)
 {
     struct lxc_container *c = ep->c;
-    bool res;
-    int errnum = 0;
 
     if (!c)
         return erlxc_errno(EINVAL);
 
-    errno = 0;
-    res = c->stop(c);
-    errnum = errno;
-
     lxc_container_put(c);
-    return (res ? erl_mk_atom("ok") : erlxc_errno(errnum));
+    return (c->stop(c) ? erl_mk_atom("true") : erl_mk_atom("false"));
 }
 
     static ETERM *
