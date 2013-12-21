@@ -64,6 +64,9 @@ main(int argc, char *argv[])
     if (!ep->c)
         erl_err_quit("failed to create container");
 
+    free(name);
+    free(path);
+
     erlxc_loop(ep);
     exit(0);
 }
