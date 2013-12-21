@@ -36,6 +36,7 @@ runit(Container) ->
 
         defined(Container),
         state(Container),
+        wait(Container),
 
         list(Container, active),
         list(Container, all),
@@ -128,6 +129,12 @@ clear_config_item(Container) ->
 state(Container) ->
     Reply = liblxc:state(Container),
     ?_assertEqual(<<"STOPPED">>, Reply).
+
+wait(Container) ->
+    State = liblxc:state(Container),
+    % Will timeout if wait fails
+    Reply = liblxc:wait(Container, State, 60 * 10),
+    ?_assertEqual(true, Reply).
 
 defined(Container) ->
     Reply = liblxc:defined(Container),

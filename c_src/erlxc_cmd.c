@@ -75,6 +75,49 @@ erlxc_lxc_container_state(erlxc_state_t *ep, ETERM *arg)
 }
 
     static ETERM *
+erlxc_lxc_container_wait(erlxc_state_t *ep, ETERM *arg)
+{
+    ETERM *hd = NULL;
+    struct lxc_container *c = ep->c;
+    char *state = NULL;
+    int timeout = 0;
+    bool res;
+
+    if (!c)
+        return erlxc_errno(EINVAL);
+
+    /* state */
+    arg = erlxc_list_head(&hd, arg);
+    if (!hd)
+        goto BADARG;
+
+    if (erl_iolist_length(hd) > 0)
+        state = erl_iolist_to_string(hd);
+
+    if (!state)
+        goto BADARG;
+
+    /* timeout */
+    arg = erlxc_list_head(&hd, arg);
+    if (!hd)
+        goto BADARG;
+
+    timeout = ERL_INT_VALUE(hd);
+    if (timeout < 0)
+        goto BADARG;
+
+    res = c->wait(c, state, timeout);
+
+    erl_free(state);
+
+    return (res ? erl_mk_atom("true") : erl_mk_atom("false"));
+
+BADARG:
+    erl_free(state);
+    return erl_mk_atom("badarg");
+}
+
+    static ETERM *
 erlxc_lxc_container_defined(erlxc_state_t *ep, ETERM *arg)
 {
     struct lxc_container *c = ep->c;

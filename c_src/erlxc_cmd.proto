@@ -20,4 +20,5 @@ lxc_container_shutdown/1
 lxc_container_start/2
 lxc_container_state/0
 lxc_container_stop/0
+lxc_container_wait/2
 test_argv/1
