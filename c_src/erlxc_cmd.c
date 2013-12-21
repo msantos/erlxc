@@ -633,7 +633,7 @@ BADARG:
 }
 
     static ETERM *
-erlxc_argv(erlxc_state_t *ep, ETERM *arg)
+erlxc_test_argv(erlxc_state_t *ep, ETERM *arg)
 {
     ETERM *hd = NULL;
     char **argv = NULL;
