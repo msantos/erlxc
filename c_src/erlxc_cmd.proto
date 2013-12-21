@@ -13,6 +13,8 @@ lxc_container_clear_config/1
 lxc_container_clear_config_item/2
 lxc_container_get_config_item/2
 lxc_container_set_config_item/3
+lxc_container_get_config_path/1
+lxc_container_set_config_path/2
 lxc_container_load_config/2
 lxc_container_init_pid/1
 argv/1

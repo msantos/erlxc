@@ -446,7 +446,6 @@ erlxc_lxc_container_get_config_item(erlxc_state_t *ep, ETERM *arg)
     int n = 0;
     ETERM *res = NULL;
 
-
     arg = erlxc_list_head(&hd, arg);
     if (!hd)
         goto BADARG;
@@ -549,6 +548,67 @@ BADARG:
     erl_free(key);
     erl_free(val);
 
+    return erl_mk_atom("badarg");
+}
+
+    static ETERM *
+erlxc_lxc_container_get_config_path(erlxc_state_t *ep, ETERM *arg)
+{
+    ETERM *hd = NULL;
+    struct lxc_container *c = NULL;
+    const char *path = NULL;
+
+    arg = erlxc_list_head(&hd, arg);
+    if (!hd)
+        goto BADARG;
+
+    c = erlxc_cid(ep, ERL_INT_VALUE(hd));
+    if (!c)
+        return erlxc_errno(EINVAL);
+
+    path = c->get_config_path(c);
+
+    if (!path)
+        return erl_mk_binary("",0);
+
+    return erl_mk_binary(path, strlen(path));
+
+BADARG:
+    return erl_mk_atom("badarg");
+}
+
+    static ETERM *
+erlxc_lxc_container_set_config_path(erlxc_state_t *ep, ETERM *arg)
+{
+    ETERM *hd = NULL;
+    struct lxc_container *c = NULL;
+    char *path = NULL;
+
+    arg = erlxc_list_head(&hd, arg);
+    if (!hd)
+        goto BADARG;
+
+    c = erlxc_cid(ep, ERL_INT_VALUE(hd));
+    if (!c)
+        return erlxc_errno(EINVAL);
+
+    /* path */
+    arg = erlxc_list_head(&hd, arg);
+    if (!hd)
+        goto BADARG;
+
+    if (erl_iolist_length(hd) > 0)
+        path = erl_iolist_to_string(hd);
+
+    if (!path)
+        goto BADARG;
+
+    if (c->set_config_path(c, path)) {
+        erl_free(path);
+        return erl_mk_atom("ok");
+    }
+
+BADARG:
     return erl_mk_atom("badarg");
 }
 

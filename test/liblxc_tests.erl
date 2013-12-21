@@ -42,7 +42,9 @@ run(Ref) ->
         get_config_item(Ref, Container),
         clear_config_item(Ref, Container),
         defined(Ref),
-        running(Ref, Container)
+        running(Ref, Container),
+        get_config_path(Ref, Container),
+        set_config_path(Ref, Container)
     ].
 
 start() ->
@@ -89,3 +91,12 @@ defined(Ref) ->
 running(Ref, Container) ->
     Reply = liblxc:running(Ref, Container),
     ?_assertEqual(false, Reply).
+
+get_config_path(Ref, Container) ->
+    Reply = liblxc:get_config_path(Ref, Container),
+    ?_assertEqual(true, is_binary(Reply)).
+
+set_config_path(Ref, Container) ->
+    Path = liblxc:get_config_path(Ref, Container),
+    Reply = liblxc:set_config_path(Ref, Container, Path),
+    ?_assertEqual(ok, Reply).
