@@ -70,9 +70,9 @@ stopit(Container) ->
 create(Container) ->
     false = liblxc:defined(Container),
     false = liblxc:running(Container),
-    ok = liblxc:set_config_item(Container, <<"lxc.network.type">>, <<"veth">>),
-    ok = liblxc:set_config_item(Container, <<"lxc.network.link">>, <<"br0">>),
-    ok = liblxc:set_config_item(Container, <<"lxc.network.flags">>, <<"up">>),
+    true = liblxc:set_config_item(Container, <<"lxc.network.type">>, <<"veth">>),
+    true = liblxc:set_config_item(Container, <<"lxc.network.link">>, <<"br0">>),
+    true = liblxc:set_config_item(Container, <<"lxc.network.flags">>, <<"up">>),
 
     Reply = liblxc:create(
         Container,
@@ -99,7 +99,7 @@ stop(Container) ->
 
 list(Container, Type) ->
     Reply = liblxc:list(Container, Type),
-    ?_assertMatch({ok, _}, Reply).
+    ?_assertEqual(true, is_list(Reply)).
 
 name(Container) ->
     Reply = liblxc:name(Container),
@@ -110,21 +110,22 @@ config_file_name(Container) ->
     ?_assertEqual(true, is_binary(Reply)).
 
 get_keys(Container) ->
-    {ok, Bin} = liblxc:get_keys(Container),
+    Bin = liblxc:get_keys(Container),
     Keys = binary:split(Bin, <<"\n">>, [global,trim]),
     Exists = lists:member(<<"lxc.utsname">>, Keys),
     ?_assertEqual(true, Exists).
 
 get_config_item(Container) ->
     Reply = liblxc:get_config_item(Container, <<"lxc.utsname">>),
-    ?_assertMatch({ok, <<"erlxc", _/binary>>}, Reply).
+    ?_assertMatch(<<"erlxc", _/binary>>, Reply).
 
 clear_config_item(Container) ->
-    {ok, _} = liblxc:get_config_item(Container, <<"lxc.network">>),
-    ok = liblxc:clear_config_item(Container, <<"lxc.network">>),
-    ok = liblxc:clear_config_item(Container, <<"lxc.network">>),
+    Item = liblxc:get_config_item(Container, <<"lxc.network">>),
+    true = is_binary(Item),
+    true = liblxc:clear_config_item(Container, <<"lxc.network">>),
+    true = liblxc:clear_config_item(Container, <<"lxc.network">>),
     Reply = liblxc:get_config_item(Container, <<"lxc.network">>),
-    ?_assertEqual({error,none}, Reply).
+    ?_assertEqual(none, Reply).
 
 state(Container) ->
     Reply = liblxc:state(Container),
@@ -151,7 +152,7 @@ get_config_path(Container) ->
 set_config_path(Container) ->
     Path = liblxc:get_config_path(Container),
     Reply = liblxc:set_config_path(Container, Path),
-    ?_assertEqual(ok, Reply).
+    ?_assertEqual(true, Reply).
 
 i2b(N) ->
     list_to_binary(integer_to_list(N)).

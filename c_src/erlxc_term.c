@@ -55,6 +55,12 @@ erlxc_bool(bool ok)
 }
 
     ETERM *
+erlxc_bin(const char *buf)
+{
+    return (buf ? erl_mk_binary(buf, strlen(buf)) : erl_mk_binary("",0));
+}
+
+    ETERM *
 erlxc_list_head(ETERM **hd, ETERM *list)
 {
     *hd = erl_hd(list);

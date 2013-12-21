@@ -57,7 +57,7 @@ erlxc_lxc_container_name(erlxc_state_t *ep, ETERM *arg)
     if (!c)
         return erl_mk_atom("badarg");
 
-    return (c->name ? erl_mk_binary(c->name, strlen(c->name)) : erl_mk_binary("", 0));
+    return erlxc_bin(c->name);
 }
 
     static ETERM *
@@ -71,7 +71,7 @@ erlxc_lxc_container_state(erlxc_state_t *ep, ETERM *arg)
 
     state = c->state(c);
 
-    return (state ? erl_mk_binary(state, strlen(state)) : erl_mk_binary("",0));
+    return erlxc_bin(state);
 }
 
     static ETERM *
@@ -337,7 +337,7 @@ erlxc_lxc_container_init_pid(erlxc_state_t *ep, ETERM *arg)
     pid = c->init_pid(c);
 
     /* XXX overflow pid_t -> int */
-    return erlxc_tuple2(erl_mk_atom("ok"), erl_mk_int(pid));
+    return erl_mk_int(pid);
 }
 
     static ETERM *
@@ -360,7 +360,7 @@ erlxc_lxc_container_load_config(erlxc_state_t *ep, ETERM *arg)
             goto BADARG;
     }
 
-    return (c->load_config(c, path) ? erl_mk_atom("ok") : erlxc_errno(errno));
+    return erlxc_bool(c->load_config(c, path));
 
 BADARG:
     return erl_mk_atom("badarg");
@@ -398,7 +398,7 @@ erlxc_lxc_container_get_keys(erlxc_state_t *ep, ETERM *arg)
 
     n = c->get_keys(c, key, buf, (key ? sizeof(buf) : len+1));
 
-    return (n > 0 ? erlxc_tuple2(erl_mk_atom("ok"), erl_mk_binary(buf, n)) : erlxc_error("none"));
+    return (n > 0 ? erl_mk_binary(buf, n) : erl_mk_binary("",0));
 
 BADARG:
     erl_free(key);
@@ -421,7 +421,7 @@ erlxc_lxc_container_config_file_name(erlxc_state_t *ep, ETERM *arg)
 
     free(name);
 
-    return erl_mk_binary(name, strlen(name));
+    return erlxc_bin(name);
 }
 
     static ETERM *
@@ -433,7 +433,7 @@ erlxc_lxc_container_clear_config(erlxc_state_t *ep, ETERM *arg)
         return erl_mk_atom("badarg");
 
     c->clear_config(c);
-    return erl_mk_atom("ok");
+    return erl_mk_atom("true");
 }
 
     static ETERM *
@@ -443,7 +443,6 @@ erlxc_lxc_container_clear_config_item(erlxc_state_t *ep, ETERM *arg)
     struct lxc_container *c = ep->c;
     char *key = NULL;
     bool res;
-    int errnum = 0;
 
     if (!c)
         return erl_mk_atom("badarg");
@@ -460,11 +459,10 @@ erlxc_lxc_container_clear_config_item(erlxc_state_t *ep, ETERM *arg)
         goto BADARG;
 
     res = c->clear_config_item(c, key);
-    errnum = errno;
 
     erl_free(key);
 
-    return (res ? erl_mk_atom("ok") : erlxc_errno(errnum));
+    return erlxc_bool(res);
 
 BADARG:
     erl_free(key);
@@ -501,7 +499,7 @@ erlxc_lxc_container_get_config_item(erlxc_state_t *ep, ETERM *arg)
     /* 0 is ??? */
     if (n < 1) {
         erl_free(key);
-        return erlxc_error("none");
+        return erl_mk_atom("none");
     }
 
     /* account for null */
@@ -517,7 +515,7 @@ erlxc_lxc_container_get_config_item(erlxc_state_t *ep, ETERM *arg)
     erl_free(key);
     erl_free(buf);
 
-    return erlxc_tuple2(erl_mk_atom("ok"), res);
+    return res;
 
 BADARG:
     erl_free(key);
@@ -534,7 +532,6 @@ erlxc_lxc_container_set_config_item(erlxc_state_t *ep, ETERM *arg)
     char *key = NULL;
     char *val = NULL;
     bool res;
-    int errnum = 0;
 
     if (!c)
         return erl_mk_atom("badarg");
@@ -561,14 +558,12 @@ erlxc_lxc_container_set_config_item(erlxc_state_t *ep, ETERM *arg)
             goto BADARG;
     }
 
-    errno = 0;
     res = c->set_config_item(c, key, val);
-    errnum = errno;
 
     erl_free(key);
     erl_free(val);
 
-    return (res ? erl_mk_atom("ok") : erlxc_errno(errnum));
+    return erlxc_bool(res);
 
 BADARG:
     erl_free(key);
@@ -591,7 +586,7 @@ erlxc_lxc_container_get_config_path(erlxc_state_t *ep, ETERM *arg)
     if (!path)
         return erl_mk_binary("",0);
 
-    return erl_mk_binary(path, strlen(path));
+    return erlxc_bin(path);
 }
 
     static ETERM *
@@ -600,6 +595,7 @@ erlxc_lxc_container_set_config_path(erlxc_state_t *ep, ETERM *arg)
     ETERM *hd = NULL;
     struct lxc_container *c = ep->c;
     char *path = NULL;
+    bool res;
 
     if (!c)
         return erl_mk_atom("badarg");
@@ -615,10 +611,9 @@ erlxc_lxc_container_set_config_path(erlxc_state_t *ep, ETERM *arg)
     if (!path)
         goto BADARG;
 
-    if (c->set_config_path(c, path)) {
-        erl_free(path);
-        return erl_mk_atom("ok");
-    }
+    res = c->set_config_path(c, path);
+    erl_free(path);
+    return erlxc_bool(res);
 
 BADARG:
     return erl_mk_atom("badarg");
@@ -683,7 +678,7 @@ erlxc_list_containers(erlxc_state_t *ep, ETERM *arg,
     if (n > 0)
         free(names);
 
-    return erlxc_ok(erl_mk_list(reply, n));
+    return erl_mk_list(reply, n);
 
 BADARG:
     return erl_mk_atom("badarg");
