@@ -110,7 +110,7 @@ erlxc_lxc_container_wait(erlxc_state_t *ep, ETERM *arg)
 
     erl_free(state);
 
-    return (res ? erl_mk_atom("true") : erl_mk_atom("false"));
+    return erlxc_bool(res);
 
 BADARG:
     erl_free(state);
@@ -125,7 +125,7 @@ erlxc_lxc_container_defined(erlxc_state_t *ep, ETERM *arg)
     if (!c)
         return erlxc_errno(EINVAL);
 
-    return (c->is_defined(c) ? erl_mk_atom("true") : erl_mk_atom("false"));
+    return erlxc_bool(c->is_defined(c));
 }
 
     static ETERM *
@@ -136,7 +136,7 @@ erlxc_lxc_container_running(erlxc_state_t *ep, ETERM *arg)
     if (!c)
         return erlxc_errno(EINVAL);
 
-    return (c->is_running(c) ? erl_mk_atom("true") : erl_mk_atom("false"));
+    return erlxc_bool(c->is_running(c));
 }
 
     static ETERM *
@@ -216,7 +216,7 @@ erlxc_lxc_container_create(erlxc_state_t *ep, ETERM *arg)
 
     erlxc_free_argv(argv);
 
-    return (res ? erl_mk_atom("true") : erl_mk_atom("false"));
+    return erlxc_bool(res);
 
 BADARG:
     erlxc_free_argv(argv);
@@ -231,7 +231,7 @@ erlxc_lxc_container_destroy(erlxc_state_t *ep, ETERM *arg)
     if (!c)
         return erlxc_errno(EINVAL);
 
-    return (c->destroy(c) ? erl_mk_atom("true") : erl_mk_atom("false"));
+    return erlxc_bool(c->destroy(c));
 }
 
     static ETERM *
@@ -297,7 +297,7 @@ erlxc_lxc_container_stop(erlxc_state_t *ep, ETERM *arg)
         return erlxc_errno(EINVAL);
 
     lxc_container_put(c);
-    return (c->stop(c) ? erl_mk_atom("true") : erl_mk_atom("false"));
+    return erlxc_bool(c->stop(c));
 }
 
     static ETERM *
@@ -319,7 +319,7 @@ erlxc_lxc_container_shutdown(erlxc_state_t *ep, ETERM *arg)
     if (timeout < 0)
         goto BADARG;
 
-    return (c->shutdown(c, timeout) ? erl_mk_atom("true") : erl_mk_atom("false"));
+    return erlxc_bool(c->shutdown(c, timeout));
 
 BADARG:
     return erl_mk_atom("badarg");

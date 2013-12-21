@@ -49,6 +49,12 @@ erlxc_ok(ETERM *term)
 }
 
     ETERM *
+erlxc_bool(bool ok)
+{
+    return (ok ? erl_mk_atom("true") : erl_mk_atom("false"));
+}
+
+    ETERM *
 erlxc_list_head(ETERM **hd, ETERM *list)
 {
     *hd = erl_hd(list);
