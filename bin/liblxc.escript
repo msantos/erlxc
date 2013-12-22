@@ -49,6 +49,9 @@ mkerl(File, Proto) ->
             ),
 %    Includes = includes(["liblxc.hrl"]),
 
+    % Type specs
+    Specs = erl_syntax:comment(["%__SPECS__%%"]),
+
     % Any hardcoded functions will be included here
     Static = erl_syntax:comment(["%__STATIC__%%"]),
 
@@ -88,6 +91,8 @@ mkerl(File, Proto) ->
                 Module,
 %                Includes,
 
+                Specs,
+
                 Comment_static,
                 Exports_static,
 
@@ -99,7 +104,8 @@ mkerl(File, Proto) ->
                 Functions
             ]))),
 
-    Code = re:replace(Code0, "%%__STATIC__%%", static()),
+    Code1 = re:replace(Code0, "%%__STATIC__%%", static()),
+    Code = re:replace(Code1, "%%__SPECS__%%", specs()),
 
 %    io:format("~s~n", [Code]).
     file:write_file(File, [Code]).
@@ -148,7 +154,7 @@ list(Container) ->
 static({list,2}) ->
 "
 list(Container, Type) ->
-    list(Container, Type, [<<>>]).
+    list(Container, Type, <<>>).
 ";
 
 static({list,3}) ->
@@ -192,14 +198,45 @@ lookup(Cmd, N, Cmds, Max) when N =< Max ->
 
 static({call,2}) ->
 "
-call(Pid, Command) ->
-    call(Pid, Command, []).
+call(Container, Command) ->
+    call(Container, Command, []).
 ";
 static({call,3}) ->
 "
-call(Pid, Command, Arg) when is_pid(Pid), is_list(Arg) ->
-    erlxc_drv:call(Pid, erlxc_drv:encode(command(Command), Arg)).
+call(Container, Command, Arg) when is_pid(Container), is_list(Arg) ->
+    erlxc_drv:call(Container, erlxc_drv:encode(command(Command), Arg)).
 ".
 
 %includes(Header) ->
 %    [ erl_syntax:attribute(erl_syntax:atom(include), [erl_syntax:string(N)]) || N <- Header ].
+
+% FIXME hack for hard coding typespecs
+specs() ->
+"
+-spec list_active_containers(pid(), iodata()) -> [binary()].
+-spec list_all_containers(pid(), iodata()) -> [binary()].
+-spec list_defined_containers(pid(), iodata()) -> [binary()].
+-spec clear_config(pid()) -> boolean().
+-spec clear_config_item(pid(), iodata()) -> boolean().
+-spec config_file_name(pid()) -> binary().
+-spec create(pid(), iodata(), iodata(), iodata(), integer(), [binary()]) -> boolean().
+-spec daemonize(pid(), 0 | 1) -> boolean().
+-spec defined(pid()) -> boolean().
+-spec destroy(pid()) -> boolean().
+-spec get_config_item(pid(), iodata())  -> binary() | 'none'.
+-spec get_config_path(pid()) -> binary().
+-spec get_keys(pid(), iodata()) -> binary().
+-spec init_pid(pid()) -> integer().
+-spec load_config(pid(), iodata()) -> boolean().
+-spec name(pid()) -> binary().
+-spec running(pid()) -> boolean().
+-spec save_config(pid(), iodata()) -> boolean().
+-spec set_config_item(pid(), iodata(), iodata()) -> boolean().
+-spec set_config_path(pid(), iodata()) -> boolean().
+-spec shutdown(pid(), non_neg_integer()) -> boolean().
+-spec start(pid(), 0 | 1, iodata()) -> {ok, non_neg_integer()} | {error, file:posix()}.
+-spec state(pid()) -> binary().
+-spec stop(pid()) -> boolean().
+-spec wait(pid(), iodata(), non_neg_integer()) -> boolean().
+-spec test_argv(pid(), [binary()]) -> ok.
+".
