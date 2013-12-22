@@ -114,6 +114,34 @@ BADARG:
 }
 
     static ETERM *
+erlxc_lxc_container_daemonize(erlxc_state_t *ep, ETERM *arg)
+{
+    ETERM *hd = NULL;
+    struct lxc_container *c = ep->c;
+    int state = 0;
+    bool res;
+
+    if (!c)
+        return erl_mk_atom("badarg");
+
+    /* state */
+    arg = erlxc_list_head(&hd, arg);
+    if (!hd)
+        goto BADARG;
+
+    state = ERL_INT_VALUE(hd);
+    if (state != 0 && state != 1)
+        goto BADARG;
+
+    res = c->want_daemonize(c, state);
+
+    return erlxc_bool(res);
+
+BADARG:
+    return erl_mk_atom("badarg");
+}
+
+    static ETERM *
 erlxc_lxc_container_defined(erlxc_state_t *ep, ETERM *arg)
 {
     struct lxc_container *c = ep->c;

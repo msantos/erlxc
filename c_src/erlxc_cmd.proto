@@ -5,6 +5,7 @@ lxc_container_clear_config/0
 lxc_container_clear_config_item/1
 lxc_container_config_file_name/0
 lxc_container_create/5
+lxc_container_daemonize/1
 lxc_container_defined/0
 lxc_container_destroy/0
 lxc_container_get_config_item/1
