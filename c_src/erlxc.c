@@ -38,8 +38,6 @@ main(int argc, char *argv[])
     if (!ep)
         return -1;
 
-    signal(SIGCHLD, SIG_IGN);
-
     while ( (ch = getopt(argc, argv, "e:n:p:v")) != -1) {
         switch (ch) {
             case 'e':
