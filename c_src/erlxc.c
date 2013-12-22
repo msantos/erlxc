@@ -112,6 +112,9 @@ erlxc_loop(erlxc_state_t *ep)
 
         erl_free_compound(arg);
 
+        /* Check for defunct processes */
+        while (waitpid(-1, 0, WNOHANG) > 0);
+
         (void)fflush(stderr);
     }
 }
