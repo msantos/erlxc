@@ -15,6 +15,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <sys/prctl.h>
 
 #include "erlxc.h"
 #include "erlxc_cmd.h"
@@ -259,6 +260,9 @@ erlxc_lxc_container_start(erlxc_state_t *ep, ETERM *arg)
         case -1:
             return erlxc_errno(errnum);
         case 0:
+            if (prctl(PR_SET_PDEATHSIG, SIGKILL) < 0)
+                erl_err_sys("signal");
+
             res = c->start(c, useinit, argv);
             (void)res;
             erl_err_quit("container stopped");
