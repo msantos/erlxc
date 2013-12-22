@@ -24,6 +24,9 @@ static void erlxc_free_argv(char **);
 static ETERM *erlxc_list_containers(erlxc_state_t *, ETERM *,
         int (*)(const char *, char ***, struct lxc_container ***));
 
+static int disable_stdout();
+static int enable_stdout(int fd);
+
 /* Options */
 enum {
     ERLXC_TERMINATE_ON_EXIT = 1 << 0,   /* Destroy the container when the port stops */
@@ -33,6 +36,8 @@ enum {
 erlxc_cmd(erlxc_state_t *ep, u_int32_t cmd, ETERM *arg)
 {
     erlxc_cmd_t *fun = NULL;
+    ETERM *t = NULL;
+    int fd = -1;
 
     VERBOSE(2, "cmd=%d", cmd);
     if (ep->verbose >= 2)
@@ -46,7 +51,16 @@ erlxc_cmd(erlxc_state_t *ep, u_int32_t cmd, ETERM *arg)
     if (!ERL_IS_LIST(arg) || erl_length(arg) != fun->narg)
         return erl_mk_atom("badarg");
 
-    return (*fun->fp)(ep, arg);
+    fd = disable_stdout();
+    if (fd < 0)
+        erl_err_sys("disable_stdout");
+
+    t = (*fun->fp)(ep, arg);
+
+    if (enable_stdout(fd) < 0)
+        erl_err_sys("enable_stdout");
+
+    return t;
 }
 
     static ETERM *
@@ -149,8 +163,6 @@ erlxc_lxc_container_create(erlxc_state_t *ep, ETERM *arg)
     struct bdev_specs *specs = NULL;
     int flags = 0;
     char **argv = NULL;
-    int fdout = -1;
-    int fdnull = -1;
     bool res;
 
     if (!c)
@@ -195,12 +207,6 @@ erlxc_lxc_container_create(erlxc_state_t *ep, ETERM *arg)
             goto BADARG;
     }
 
-    (void)fflush(stdout);
-    fdout = dup(STDOUT_FILENO);
-    fdnull = open("/dev/null", O_WRONLY);
-    (void)dup2(fdnull, STDOUT_FILENO);
-    (void)close(fdnull);
-
     res = c->create(
             c,
             t,
@@ -209,10 +215,6 @@ erlxc_lxc_container_create(erlxc_state_t *ep, ETERM *arg)
             flags,
             argv
             );
-
-    (void)fflush(stdout);
-    (void)dup2(fdout, STDOUT_FILENO);
-    (void)close(fdout);
 
     erlxc_free_argv(argv);
 
@@ -749,6 +751,54 @@ erlxc_free_argv(char **argv)
 
     for (i = 0; argv[i] != NULL; i++)
         erl_free(argv[i]);
+}
+
+    static int
+disable_stdout()
+{
+    int fdout = -1;
+    int fdnull = -1;
+
+    if (fflush(stdout) != 0)
+        goto ERR;
+
+    fdout = dup(STDOUT_FILENO);
+    fdnull = open("/dev/null", O_WRONLY);
+
+    if (fdout < 0 || fdnull < 0)
+        goto ERR;
+
+    if (dup2(fdnull, STDOUT_FILENO) < 0)
+        goto ERR;
+
+    if (close(fdnull) < 0)
+        goto ERR;
+
+    return fdout;
+
+ERR:
+    if (fdout > -1)
+        (void)close(fdout);
+
+    if (fdnull > -1)
+        (void)close(fdnull);
+
+    return -1;
+}
+
+    static int
+enable_stdout(int fd)
+{
+    if (fflush(stdout) != 0)
+        return -1;
+
+    if (dup2(fd, STDOUT_FILENO) < 0)
+        return -1;
+
+    if (close(fd) < 0)
+        return -1;
+
+    return 0;
 }
 
 /*
