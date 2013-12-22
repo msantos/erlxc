@@ -68,10 +68,11 @@ stopit(Container) ->
     erlxc_drv:stop(Container).
 
 create(Container) ->
+    Bridge = getenv("ERLXC_TEST_BRIDGE", <<"lxcbr0">>),
     false = liblxc:defined(Container),
     false = liblxc:running(Container),
     true = liblxc:set_config_item(Container, <<"lxc.network.type">>, <<"veth">>),
-    true = liblxc:set_config_item(Container, <<"lxc.network.link">>, <<"br0">>),
+    true = liblxc:set_config_item(Container, <<"lxc.network.link">>, Bridge),
     true = liblxc:set_config_item(Container, <<"lxc.network.flags">>, <<"up">>),
 
     Reply = liblxc:create(
@@ -156,3 +157,9 @@ set_config_path(Container) ->
 
 i2b(N) ->
     list_to_binary(integer_to_list(N)).
+
+getenv(Var, Default) ->
+    case os:getenv(Var) of
+        false -> Default;
+        N -> N
+    end.
