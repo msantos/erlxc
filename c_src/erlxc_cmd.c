@@ -293,7 +293,8 @@ erlxc_lxc_container_start(erlxc_state_t *ep, ETERM *arg)
 
             res = c->start(c, useinit, argv);
             (void)res;
-            erl_err_quit("container stopped");
+            VERBOSE(1,"container stopped");
+            exit (0);
         default:
             erlxc_free_argv(argv);
             return erlxc_tuple2(erl_mk_atom("ok"), erl_mk_int(pid));

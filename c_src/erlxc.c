@@ -104,13 +104,10 @@ erlxc_loop(erlxc_state_t *ep)
 
         free(msg->arg);
         free(msg);
-        // erl_free_term(arg)
         erl_free_compound(arg);
 
         if (erlxc_write(reply) < 0)
             erl_err_sys("erlxc_write");
-
-        erl_free_compound(arg);
 
         /* Check for defunct processes */
         while (waitpid(-1, 0, WNOHANG) > 0);
