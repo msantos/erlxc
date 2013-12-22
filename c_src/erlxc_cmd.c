@@ -367,6 +367,32 @@ BADARG:
 }
 
     static ETERM *
+erlxc_lxc_container_save_config(erlxc_state_t *ep, ETERM *arg)
+{
+    ETERM *hd = NULL;
+    struct lxc_container *c = ep->c;
+    char *path = NULL;
+
+    if (!c)
+        return erl_mk_atom("badarg");
+
+    arg = erlxc_list_head(&hd, arg);
+    if (!hd)
+        goto BADARG;
+
+    if (erl_iolist_length(hd) > 0)
+        path = erl_iolist_to_string(hd);
+
+    if (!path)
+        goto BADARG;
+
+    return erlxc_bool(c->save_config(c, path));
+
+BADARG:
+    return erl_mk_atom("badarg");
+}
+
+    static ETERM *
 erlxc_lxc_container_get_keys(erlxc_state_t *ep, ETERM *arg)
 {
     ETERM *hd = NULL;

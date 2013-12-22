@@ -53,6 +53,8 @@ runit(Container) ->
         get_config_path(Container),
         set_config_path(Container),
 
+        save_config(Container),
+
         stop(Container),
 
         destroy(Container)
@@ -153,6 +155,14 @@ get_config_path(Container) ->
 set_config_path(Container) ->
     Path = liblxc:get_config_path(Container),
     Reply = liblxc:set_config_path(Container, Path),
+    ?_assertEqual(true, Reply).
+
+save_config(Container) ->
+    Name = liblxc:name(Container),
+    Cfg = <<"/tmp/", Name/binary, ".cfg">>,
+    Reply = liblxc:save_config(Container, Cfg),
+    {ok,_} = file:read_file_info(Cfg),
+    file:delete(Cfg),
     ?_assertEqual(true, Reply).
 
 i2b(N) ->
