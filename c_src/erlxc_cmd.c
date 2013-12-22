@@ -27,11 +27,6 @@ static ETERM *erlxc_list_containers(erlxc_state_t *, ETERM *,
 static int disable_stdout();
 static int enable_stdout(int fd);
 
-/* Options */
-enum {
-    ERLXC_TERMINATE_ON_EXIT = 1 << 0,   /* Destroy the container when the port stops */
-};
-
     ETERM *
 erlxc_cmd(erlxc_state_t *ep, u_int32_t cmd, ETERM *arg)
 {
@@ -506,7 +501,7 @@ erlxc_lxc_container_get_config_item(erlxc_state_t *ep, ETERM *arg)
     char *key = NULL;
     char *buf = NULL;
     int n = 0;
-    ETERM *res = NULL;
+    ETERM *t = NULL;
 
     if (!c)
         return erl_mk_atom("badarg");
@@ -538,12 +533,12 @@ erlxc_lxc_container_get_config_item(erlxc_state_t *ep, ETERM *arg)
     (void)c->get_config_item(c, key, buf, n+1);
 
     /* null is not included in binary */
-    res = erl_mk_binary(buf, n);
+    t = erl_mk_binary(buf, n);
 
     erl_free(key);
     erl_free(buf);
 
-    return res;
+    return t;
 
 BADARG:
     erl_free(key);
