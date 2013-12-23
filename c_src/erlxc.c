@@ -182,11 +182,15 @@ erlxc_write(ETERM *t)
     if (erl_encode(t, buf) < 1)
         goto ERR;
 
+    flockfile(stdout);
+
     if (write(STDOUT_FILENO, &hlen, 4) != 4)
         goto ERR;
 
     if (write(STDOUT_FILENO, buf, tlen) != tlen)
         goto ERR;
+
+    funlockfile(stdout);
 
     erl_free(buf);
     return 0;
