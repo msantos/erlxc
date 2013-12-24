@@ -13,7 +13,8 @@
 -module(erlxc).
 
 -export([
-        spawn/1, spawn/2
+        spawn/1, spawn/2,
+        exit/2
     ]).
 
 spawn(Name) ->
@@ -26,6 +27,12 @@ spawn(Name, Options) ->
         Error ->
             Error
     end.
+
+exit(Container, normal) ->
+    liblxc:shutdown(Container, 0);
+
+exit(Container, kill) ->
+    liblxc:stop(Container).
 
 defined(Container, Options) ->
     case liblxc:defined(Container) of
@@ -76,8 +83,12 @@ start(Container, Options) ->
 
     case liblxc:start(Container, bool(UseInit), Path) of
         {ok, _} ->
-            % XXX
-            running(Container, Options);
+            case liblxc:running(Container) of
+                true ->
+                    {ok, Container};
+                false ->
+                    erlang:exit(badarg)
+            end;
         Error ->
             Error
     end.
