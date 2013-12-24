@@ -50,8 +50,7 @@ call(Pid, Data) when is_pid(Pid), is_binary(Data), byte_size(Data) < 16#ffff ->
             Error
     end,
     case Reply of
-        %badarg -> erlang:error(badarg);
-        badarg -> badarg;
+        badarg -> erlang:error(badarg);
         _ -> Reply
     end.
 
