@@ -15,8 +15,8 @@
 -behaviour(gen_server).
 
 %% API
--export([start/0, start/1, start/2, stop/1]).
--export([start_link/2]).
+-export([start/1, start/2, stop/1]).
+-export([start_link/3]).
 -export([call/2]).
 -export([encode/2]).
 -export([getopts/1]).
@@ -30,15 +30,14 @@
 -define(ERLXC_MSG_SYNC, 0).
 -define(ERLXC_MSG_ASYNC, 1).
 
-start() ->
-    start_link(self(), []).
-start(Options) ->
-    start_link(self(), Options).
-start(Pid, Options) when is_pid(Pid), is_list(Options) ->
-    start_link(Pid, Options).
+start(Name) ->
+    start(Name, []).
+start(Name, Options) ->
+    Pid = self(),
+    start_link(Pid, Name, Options).
 
-start_link(Pid, Options) ->
-    gen_server:start_link(?MODULE, [Pid, Options], []).
+start_link(Pid, Name, Options) ->
+    gen_server:start_link(?MODULE, [Pid, Name, Options], []).
 
 call(Pid, Data) when is_pid(Pid), is_binary(Data), byte_size(Data) < 16#ffff ->
     Reply = case gen_server:call(Pid, {call, Data}, infinity) of
@@ -62,9 +61,9 @@ encode(Command, Arg) when is_integer(Command), is_list(Arg) ->
 stop(Pid) ->
     gen_server:call(Pid, stop).
 
-init([Pid, Options]) ->
+init([Pid, Name, Options]) ->
     process_flag(trap_exit, true),
-    Cmd = getopts(Options),
+    Cmd = getopts([{name, Name}] ++ Options),
     Port = open_port({spawn, Cmd}, [{packet, 4}, binary]),
     {ok, #state{pid = Pid, port = Port}}.
 

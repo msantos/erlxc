@@ -20,7 +20,7 @@ spawn(Name) ->
     erlxc:spawn(Name, []).
 
 spawn(Name, Options) ->
-    case erlxc_drv:start([{name, Name}] ++ Options) of
+    case erlxc_drv:start(Name, Options) of
         {ok, Container} ->
             defined(Container, Options);
         Error ->

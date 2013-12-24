@@ -63,7 +63,7 @@ runit(Container) ->
 startit() ->
     N = binary:decode_unsigned(crypto:rand_bytes(1)),
     Name = <<"erlxc", (i2b(N))/binary>>,
-    {ok, Container} = erlxc_drv:start([{name, Name}]),
+    {ok, Container} = erlxc_drv:start(Name),
     Container.
 
 stopit(Container) ->
