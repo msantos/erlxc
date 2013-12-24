@@ -260,14 +260,14 @@ erlxc_lxc_container_start(erlxc_state_t *ep, ETERM *arg)
 
     /* useinit */
     arg = erlxc_list_head(&hd, arg);
-    if (!hd)
+    if (!hd || !ERL_IS_INTEGER(hd))
         goto BADARG;
 
     useinit = ERL_INT_VALUE(hd);
 
     /* argv */
     arg = erlxc_list_head(&hd, arg);
-    if (!hd)
+    if (!hd || !ERL_IS_LIST(hd))
         goto BADARG;
 
     if (!ERL_IS_EMPTY_LIST(hd)) {

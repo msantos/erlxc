@@ -173,11 +173,11 @@ NULL values are represented by the empty binary (<<>>).
 
         Halt the container by sending a SIGPWR to the container init process.
 
-    start(Container, UseInit, Path) -> {ok, non_neg_integer()} | {error, file:posix()}
+    start(Container, UseInit, Argv) -> {ok, non_neg_integer()} | {error, file:posix()}
 
         Types   Container = pid()
                 UseInit = 0 | 1
-                Path = iodata()
+                Argv = [binary()]
 
         Boot the container. Returns the system PID of the container process.
 

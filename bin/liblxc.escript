@@ -234,7 +234,7 @@ specs() ->
 -spec set_config_item(pid(), iodata(), iodata()) -> boolean().
 -spec set_config_path(pid(), iodata()) -> boolean().
 -spec shutdown(pid(), non_neg_integer()) -> boolean().
--spec start(pid(), 0 | 1, iodata()) -> {ok, non_neg_integer()} | {error, file:posix()}.
+-spec start(pid(), 0 | 1, [binary()]) -> {ok, non_neg_integer()} | {error, file:posix()}.
 -spec state(pid()) -> binary().
 -spec stop(pid()) -> boolean().
 -spec wait(pid(), iodata(), non_neg_integer()) -> boolean().
