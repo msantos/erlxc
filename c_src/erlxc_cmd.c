@@ -119,7 +119,6 @@ erlxc_lxc_container_daemonize(erlxc_state_t *ep, ETERM *arg)
     ETERM *hd = NULL;
     struct lxc_container *c = ep->c;
     int state = 0;
-    bool res;
 
     if (!c)
         return erl_mk_atom("badarg");
@@ -133,9 +132,7 @@ erlxc_lxc_container_daemonize(erlxc_state_t *ep, ETERM *arg)
     if (state != 0 && state != 1)
         goto BADARG;
 
-    res = c->want_daemonize(c, state);
-
-    return erlxc_bool(res);
+    return erlxc_bool(c->want_daemonize(c, state));
 
 BADARG:
     return erl_mk_atom("badarg");
