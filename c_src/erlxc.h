@@ -49,6 +49,8 @@ typedef struct {
     unsigned char *arg;
 } erlxc_msg_t;
 
+int erlxc_send(ETERM *t);
+
 ETERM *erlxc_list_head(ETERM **, ETERM *);
 ETERM *erlxc_tuple2(ETERM *, ETERM *);
 ETERM *erlxc_tuple3(ETERM *, ETERM *, ETERM *);

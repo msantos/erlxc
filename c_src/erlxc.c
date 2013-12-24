@@ -14,11 +14,14 @@
  */
 #include "erlxc.h"
 
+#define ERLXC_MSG_SYNC  0
+#define ERLXC_MSG_ASYNC (htonl(1))
+
 static void erlxc_loop(erlxc_state_t *);
 static erlxc_msg_t *erlxc_msg(erlxc_state_t *);
 static void usage(erlxc_state_t *);
 
-static int erlxc_write(ETERM *t);
+static int erlxc_write(int type, ETERM *t);
 static ssize_t erlxc_read(void *, ssize_t);
 
 extern char *__progname;
@@ -106,7 +109,7 @@ erlxc_loop(erlxc_state_t *ep)
         free(msg);
         erl_free_compound(arg);
 
-        if (erlxc_write(reply) < 0)
+        if (erlxc_write(ERLXC_MSG_SYNC, reply) < 0)
             erl_err_sys("erlxc_write");
 
         /* Check for defunct processes */
@@ -164,8 +167,14 @@ erlxc_msg(erlxc_state_t *ep)
     return msg;
 }
 
+    int
+erlxc_send(ETERM *t)
+{
+    return erlxc_write(ERLXC_MSG_ASYNC, t);
+}
+
     static int
-erlxc_write(ETERM *t)
+erlxc_write(int type, ETERM *t)
 {
     int tlen = 0;
     int hlen = 0;
@@ -173,7 +182,7 @@ erlxc_write(ETERM *t)
 
     /* XXX overflow */
     tlen = erl_term_len(t);
-    hlen = ntohl(tlen);
+    hlen = ntohl(tlen+sizeof(type));
 
     buf = erl_malloc(tlen);
     if (!buf)
@@ -184,10 +193,9 @@ erlxc_write(ETERM *t)
 
     flockfile(stdout);
 
-    if (write(STDOUT_FILENO, &hlen, 4) != 4)
-        goto ERR;
-
-    if (write(STDOUT_FILENO, buf, tlen) != tlen)
+    if ( (write(STDOUT_FILENO, &hlen, 4) != 4) ||
+         (write(STDOUT_FILENO, &type, 4) != 4) ||
+         (write(STDOUT_FILENO, buf, tlen) != tlen))
         goto ERR;
 
     funlockfile(stdout);

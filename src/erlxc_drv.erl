@@ -27,6 +27,9 @@
 
 -record(state, {pid :: pid(), port :: port()}).
 
+-define(ERLXC_MSG_SYNC, 0).
+-define(ERLXC_MSG_ASYNC, 1).
+
 start() ->
     start_link(self(), []).
 start(Options) ->
@@ -93,8 +96,21 @@ code_change(_OldVsn, State, _Extra) ->
 %%--------------------------------------------------------------------
 handle_info({'EXIT', Port, Reason}, #state{port = Port} = State) ->
     {stop, {shutdown, Reason}, State};
-handle_info({Port, {data, Data}}, #state{port = Port, pid = Pid} = State) ->
+
+handle_info({Port, {data, <<?ERLXC_MSG_SYNC:4/unsigned-integer-unit:8, Data/binary>>}},
+    #state{port = Port, pid = Pid} = State) ->
     Pid ! {erlxc, self(), Data},
+    {noreply, State};
+
+handle_info({Port, {data, <<?ERLXC_MSG_ASYNC:4/unsigned-integer-unit:8, Data/binary>>}},
+    #state{port = Port, pid = Pid} = State) ->
+    try binary_to_term(Data) of
+        Term ->
+            Pid ! {erlxc_event, self(), Term}
+    catch
+        _:_ ->
+            ok
+    end,
     {noreply, State};
 
 % WTF
