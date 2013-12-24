@@ -82,6 +82,7 @@ main(int argc, char *argv[])
     free(path);
 
     erlxc_loop(ep);
+    (void)lxc_container_put(ep->c);
     exit(0);
 }
 

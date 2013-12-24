@@ -288,34 +288,25 @@ erlxc_lxc_container_start(erlxc_state_t *ep, ETERM *arg)
         case -1:
             return erlxc_errno(errnum);
         case 0: {
-            char *name = NULL;
             ETERM *t = NULL;
-
-            name = strdup(c->name);
-            if (!name)
-                erl_err_sys("strdup");
 
             if (prctl(PR_SET_PDEATHSIG, SIGKILL) < 0)
                 erl_err_sys("signal");
 
             res = c->start(c, useinit, argv);
 
+            erlxc_lxc_container_put(ep);
+
             t = erlxc_tuple2(
                     (res ? erl_mk_atom("ok") : erl_mk_atom("error")),
-                    erlxc_tuple3(
-                        erl_mk_atom("container"),
-                        erl_mk_binary(name, strlen(name)),
-                        erl_mk_int(getpid())
-                    )
+                    erl_mk_int(getpid())
                 );
 
             (void)erlxc_send(t);
-
-            free(name);
-
             exit (0);
         }
         default:
+            erlxc_lxc_container_put(ep);
             erlxc_free_argv(argv);
             return erlxc_tuple2(erl_mk_atom("ok"), erl_mk_int(pid));
     }
@@ -333,7 +324,6 @@ erlxc_lxc_container_stop(erlxc_state_t *ep, ETERM *arg)
     if (!c)
         return erl_mk_atom("badarg");
 
-    lxc_container_put(c);
     return erlxc_bool(c->stop(c));
 }
 
@@ -786,6 +776,15 @@ erlxc_free_argv(char **argv)
 
     for (i = 0; argv[i] != NULL; i++)
         erl_free(argv[i]);
+}
+
+    void
+erlxc_lxc_container_put(erlxc_state_t *ep)
+{
+    if (lxc_container_put(ep->c) == 1)
+        ep->c = NULL;
+
+    return;
 }
 
 /*

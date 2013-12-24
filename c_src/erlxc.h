@@ -20,7 +20,6 @@
 #include <string.h>
 #include <err.h>
 
-#include <erl_nif.h>
 #include <erl_driver.h>
 #include <erl_interface.h>
 #include <ei.h>
@@ -61,6 +60,8 @@ ETERM *erlxc_bool(bool);
 ETERM *erlxc_bin(const char *);
 
 ETERM *erlxc_cmd(erlxc_state_t *, u_int32_t, ETERM *);
+
+void erlxc_lxc_container_put(erlxc_state_t *);
 
 #define VERBOSE(x, ...) do { \
     if (ep->verbose >= x) { \
