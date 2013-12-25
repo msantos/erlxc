@@ -3,6 +3,85 @@ from Erlang.
 
 Status: under development, unstable
 
+# High Level API
+
+The high level API models the container as an Erlang process.
+
+## erlxc
+
+    spawn(Name) -> Container
+    spawn(Name, Options) -> Container
+
+        Types   Container = container()
+                Name = <<>> | binary()
+                Options = [Option]
+
+        Spawn a container.
+
+    exit(Container, Reason) -> true
+
+        Types   Container = container()
+                Reason = normal | kill
+
+        Halt the container. Note: by default, the container is linked
+        to the creating process. If the process crashes, so will the
+        container.
+
+    send(Container, Data) -> true
+
+        Types   Container = container()
+                Data = iodata()
+
+        Send data to the container's console.
+
+## Examples
+
+* tcpvm
+
+This code listens on a port for TCP connections and spawns a complete
+system running Ubuntu 12.04:
+
+```erlang
+-module(tcpvm).
+-include_lib("erlxc/include/erlxc.hrl").
+-export([start/0, start/1]).
+
+start() ->
+    start([]).
+
+start(Options) ->
+    Port = proplists:get_value(port, Options, 31337),
+    {ok, LSock} = gen_tcp:listen(Port, [binary,{active,false},{reuseaddr,true}]),
+    accept(LSock, Options).
+
+accept(LSock, Options) ->
+    {ok, Socket} = gen_tcp:accept(LSock),
+    Pid = spawn(fun() -> create(Socket, Options) end),
+    ok = gen_tcp:controlling_process(Socket, Pid),
+    accept(LSock, Options).
+
+create(Socket, Options) ->
+    Container = erlxc:spawn(<<>>, Options),
+    shell(Socket, Container).
+
+shell(Socket, #container{console = Console} = Container) ->
+    inet:setopts(Socket, [{active, once}]),
+    receive
+        {tcp, Socket, Data} ->
+            erlxc:send(Container, Data),
+            shell(Socket, Container);
+        {tcp_closed, Socket} ->
+            error_logger:error_report([{socket, closed}]),
+            ok;
+        {tcp_error, Socket, Error} ->
+            error_logger:error_report([{socket, Error}]),
+            ok;
+        {Console, {data, Data}} ->
+            ok = gen_tcp:send(Socket, Data),
+            shell(Socket, Container)
+    end.
+```
+
 # Low Level API
 
 The low level API mirrors the liblxc API;
@@ -202,13 +281,42 @@ NULL values are represented by the empty binary (<<>>).
         Blocks until the container state equals the value specified in
         State. Set Timeout to 0 to return immediately.
 
-# High Level API
+## Examples
 
-The high level API models the container as an Erlang process:
+* Create an Ubuntu 12.04 container
 
-    {ok, Pid} = erlxc:spawn(Ref),
-    ok = erlxc:send(Pid, Data), % send to the container STDIN
-    {ok, Data} = erlxc:recv(Pid). % read from STDOUT
+```erlang
+-module(lxc).
+-export([
+        define/1, define/2,
+        create/1,
+        start/1,
+        shutdown/1,
+        destroy/1
+    ]).
+
+define(Name) ->
+    define(Name, <<"lxcbr0">>).
+
+define(Name, Bridge) ->
+    {ok, Container} = erlxc_drv:start([{name, Name}]),
+    liblxc:set_config_item(Container, <<"lxc.network.type">>, <<"veth">>),
+    liblxc:set_config_item(Container, <<"lxc.network.link">>, Bridge),
+    liblxc:set_config_item(Container, <<"lxc.network.flags">>, <<"up">>),
+    Container.
+
+create(Container) ->
+    liblxc:create(Container, <<"ubuntu">>, <<>>, <<>>, 0, [<<"-r">>, <<"precise">>]).
+
+start(Container) ->
+    liblxc:start(Container).
+
+shutdown(Container) ->
+    liblxc:shutdown(Container, 0).
+
+destroy(Container) ->
+    liblxc:destroy(Container).
+```
 
 # Alternatives
 
@@ -220,38 +328,3 @@ https://github.com/msantos/verx
 * islet is a high level interface for Linux containers using libvirt
 
 https://github.com/msantos/islet
-
-# Examples
-
-## Create an Ubuntu 12.04 container
-
-    -module(lxc).
-    -export([
-            define/1, define/2,
-            create/1,
-            start/1,
-            shutdown/1,
-            destroy/1
-        ]).
-
-    define(Name) ->
-        define(Name, <<"lxcbr0">>).
-
-    define(Name, Bridge) ->
-        {ok, Container} = erlxc_drv:start([{name, Name}]),
-        liblxc:set_config_item(Container, <<"lxc.network.type">>, <<"veth">>),
-        liblxc:set_config_item(Container, <<"lxc.network.link">>, Bridge),
-        liblxc:set_config_item(Container, <<"lxc.network.flags">>, <<"up">>),
-        Container.
-
-    create(Container) ->
-        liblxc:create(Container, <<"ubuntu">>, <<>>, <<>>, 0, [<<"-r">>, <<"precise">>]).
-
-    start(Container) ->
-        liblxc:start(Container).
-
-    shutdown(Container) ->
-        liblxc:shutdown(Container, 0).
-
-    destroy(Container) ->
-        liblxc:destroy(Container).
