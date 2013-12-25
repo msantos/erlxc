@@ -19,6 +19,9 @@
         exit/2
     ]).
 
+% Can be overriden by caller
+-define(SPAWN_DEFAULT, [destroy]).
+
 -type container() :: #container{pid::pid(),console::port()}.
 
 -spec spawn(iodata()) -> container().
@@ -32,7 +35,7 @@ spawn(<<>>, Options) ->
     Name = <<"erlxc", (i2b(N))/binary>>,
     erlxc:spawn(Name, Options);
 spawn(Name, Options) ->
-    case erlxc_drv:start(Name, Options) of
+    case erlxc_drv:start(Name, ?SPAWN_DEFAULT ++ Options) of
         {ok, Container} ->
             defined(Container, Options);
         Error ->

@@ -38,7 +38,12 @@
 
 #define LXCMAX  128
 
+enum {
+    erlxc_opt_destroy_on_exit = 1 << 0,     /* Destroy the container when the port exits */
+};
+
 typedef struct {
+    u_int32_t opt;
     u_int8_t verbose;
     struct lxc_container *c;
 } erlxc_state_t;
