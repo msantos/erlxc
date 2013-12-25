@@ -16,7 +16,7 @@ start() ->
 
 start(Options) ->
     Port = proplists:get_value(port, Options, 31337),
-    {ok, LSock} = gen_tcp:listen(Port, [binary,{active,false},{reuseaddr,true}]),
+    {ok, LSock} = gen_tcp:listen(Port, [inet6,binary,{active,false},{reuseaddr,true}]),
     accept(LSock, Options).
 
 accept(LSock, Options) ->
