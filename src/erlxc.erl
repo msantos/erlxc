@@ -22,7 +22,7 @@
 % Can be overriden by caller
 -define(SPAWN_DEFAULT, [destroy]).
 
--type container() :: #container{pid::pid(),console::port()}.
+-type container() :: #container{port::port(),console::port()}.
 
 -spec spawn(iodata()) -> container().
 -spec spawn(iodata(),list()) -> container().
@@ -35,23 +35,19 @@ spawn(<<>>, Options) ->
     Name = <<"erlxc", (i2b(N))/binary>>,
     erlxc:spawn(Name, Options);
 spawn(Name, Options) ->
-    case erlxc_drv:start(Name, ?SPAWN_DEFAULT ++ Options) of
-        {ok, Container} ->
-            defined(Container, Options);
-        Error ->
-            Error
-    end.
+    Container = erlxc_drv:start(Name, ?SPAWN_DEFAULT ++ Options),
+    defined(Container, Options).
 
 -spec send(container(),iodata()) -> 'true'.
 send(#container{console = Console}, Data) ->
     erlxc_console:send(Console, Data).
 
 -spec exit(container(),'kill' | 'normal') -> boolean().
-exit(#container{pid = Pid}, normal) ->
-    liblxc:shutdown(Pid, 0);
+exit(#container{port = Port}, normal) ->
+    liblxc:shutdown(Port, 0);
 
-exit(#container{pid = Pid}, kill) ->
-    liblxc:stop(Pid).
+exit(#container{port = Port}, kill) ->
+    liblxc:stop(Port).
 
 defined(Container, Options) ->
     case liblxc:defined(Container) of
@@ -65,7 +61,7 @@ running(Container, Options, Fun) ->
     case liblxc:running(Container) of
         true ->
             {ok, Console} = erlxc_console:start(liblxc:name(Container)),
-            #container{pid = Container, console = Console};
+            #container{port = Container, console = Console};
         false ->
             Fun(Container, Options)
     end.

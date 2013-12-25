@@ -12,109 +12,47 @@
 %%% ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 %%% OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 -module(erlxc_drv).
--behaviour(gen_server).
+-include_lib("erlxc/include/erlxc.hrl").
 
 %% API
 -export([start/1, start/2, stop/1]).
--export([start_link/3]).
--export([call/2]).
--export([encode/2]).
+-export([call/2, encode/2, event/1]).
 -export([getopts/1]).
 
-%% gen_server callbacks
--export([init/1, handle_call/3, handle_cast/2, handle_info/2,
-         terminate/2, code_change/3]).
-
--record(state, {pid :: pid(), port :: port()}).
-
--define(ERLXC_MSG_SYNC, 0).
--define(ERLXC_MSG_ASYNC, 1).
-
+-spec start(iodata()) -> port().
+-spec start(iodata(),[atom() | tuple()]) -> port().
 start(Name) ->
     start(Name, []).
 start(Name, Options) ->
-    Pid = self(),
-    start_link(Pid, Name, Options).
+    Cmd = getopts([{name, Name}] ++ Options),
+    open_port({spawn, Cmd}, [{packet, 4}, binary]).
 
-start_link(Pid, Name, Options) ->
-    gen_server:start_link(?MODULE, [Pid, Name, Options], []).
-
-call(Pid, Data) when is_pid(Pid), is_binary(Data), byte_size(Data) < 16#ffff ->
-    Reply = case gen_server:call(Pid, {call, Data}, infinity) of
-        ok ->
-            receive
-                {erlxc, Pid, Msg} ->
-                    binary_to_term(Msg)
-            end;
-        Error ->
-            Error
+call(Port, Data) when is_port(Port), is_binary(Data), byte_size(Data) < 16#ffff ->
+    true = erlang:port_command(Port, Data),
+    Reply = receive
+        {Port, {data, <<?ERLXC_MSG_SYNC, Msg/binary>>}} ->
+            binary_to_term(Msg)
     end,
     case Reply of
         badarg -> erlang:error(badarg);
         _ -> Reply
     end.
 
+event(Port) when is_port(Port) ->
+    receive
+        {Port, {data, <<?ERLXC_MSG_ASYNC, Msg/binary>>}} ->
+            binary_to_term(Msg)
+    after
+        0 ->
+            false
+    end.
+
+-spec encode(integer(),list()) -> <<_:32,_:_*8>>.
 encode(Command, Arg) when is_integer(Command), is_list(Arg) ->
     <<Command:4/unsigned-integer-unit:8, (term_to_binary(Arg))/binary>>.
 
-stop(Pid) ->
-    gen_server:call(Pid, stop).
-
-init([Pid, Name, Options]) ->
-    process_flag(trap_exit, true),
-    Cmd = getopts([{name, Name}] ++ Options),
-    Port = open_port({spawn, Cmd}, [{packet, 4}, binary]),
-    {ok, #state{pid = Pid, port = Port}}.
-
-handle_call({call, Packet}, _From, #state{port = Port} = State) ->
-    Reply = try erlang:port_command(Port, Packet) of
-        true ->
-            ok
-        catch
-            error:badarg ->
-                {error,closed}
-        end,
-    {reply, Reply, State};
-
-handle_call(stop, _From, State) ->
-    {stop, normal, ok, State}.
-
-handle_cast(_Msg, State) ->
-    {noreply, State}.
-
-terminate(_Reason, #state{port = Port}) ->
-    catch erlang:port_close(Port),
-    ok.
-
-code_change(_OldVsn, State, _Extra) ->
-    {ok, State}.
-
-%%--------------------------------------------------------------------
-%%% Port communication
-%%--------------------------------------------------------------------
-handle_info({'EXIT', Port, Reason}, #state{port = Port} = State) ->
-    {stop, {shutdown, Reason}, State};
-
-handle_info({Port, {data, <<?ERLXC_MSG_SYNC:4/unsigned-integer-unit:8, Data/binary>>}},
-    #state{port = Port, pid = Pid} = State) ->
-    Pid ! {erlxc, self(), Data},
-    {noreply, State};
-
-handle_info({Port, {data, <<?ERLXC_MSG_ASYNC:4/unsigned-integer-unit:8, Data/binary>>}},
-    #state{port = Port, pid = Pid} = State) ->
-    try binary_to_term(Data) of
-        Term ->
-            Pid ! {erlxc_event, self(), Term}
-    catch
-        _:_ ->
-            ok
-    end,
-    {noreply, State};
-
-% WTF
-handle_info(Info, State) ->
-    error_logger:error_report([{wtf, Info}]),
-    {noreply, State}.
+stop(Port) when is_port(Port) ->
+    erlang:port_close(Port).
 
 %%--------------------------------------------------------------------
 %%% Internal functions

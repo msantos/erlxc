@@ -203,7 +203,7 @@ call(Container, Command) ->
 ";
 static({call,3}) ->
 "
-call(Container, Command, Arg) when is_pid(Container), is_list(Arg) ->
+call(Container, Command, Arg) when is_port(Container), is_list(Arg) ->
     erlxc_drv:call(Container, erlxc_drv:encode(command(Command), Arg)).
 ".
 
@@ -213,30 +213,30 @@ call(Container, Command, Arg) when is_pid(Container), is_list(Arg) ->
 % FIXME hack for hard coding typespecs
 specs() ->
 "
--spec list_active_containers(pid(), iodata()) -> [binary()].
--spec list_all_containers(pid(), iodata()) -> [binary()].
--spec list_defined_containers(pid(), iodata()) -> [binary()].
--spec clear_config(pid()) -> boolean().
--spec clear_config_item(pid(), iodata()) -> boolean().
--spec config_file_name(pid()) -> binary().
--spec create(pid(), iodata(), iodata(), iodata(), integer(), [binary()]) -> boolean().
--spec daemonize(pid(), 0 | 1) -> boolean().
--spec defined(pid()) -> boolean().
--spec destroy(pid()) -> boolean().
--spec get_config_item(pid(), iodata())  -> binary() | 'none'.
--spec get_config_path(pid()) -> binary().
--spec get_keys(pid(), iodata()) -> binary().
--spec init_pid(pid()) -> integer().
--spec load_config(pid(), iodata()) -> boolean().
--spec name(pid()) -> binary().
--spec running(pid()) -> boolean().
--spec save_config(pid(), iodata()) -> boolean().
--spec set_config_item(pid(), iodata(), iodata()) -> boolean().
--spec set_config_path(pid(), iodata()) -> boolean().
--spec shutdown(pid(), non_neg_integer()) -> boolean().
--spec start(pid(), 0 | 1, [binary()]) -> {ok, non_neg_integer()} | {error, file:posix()}.
--spec state(pid()) -> binary().
--spec stop(pid()) -> boolean().
--spec wait(pid(), iodata(), non_neg_integer()) -> boolean().
--spec test_argv(pid(), [binary()]) -> ok.
+-spec list_active_containers(port(), iodata()) -> [binary()].
+-spec list_all_containers(port(), iodata()) -> [binary()].
+-spec list_defined_containers(port(), iodata()) -> [binary()].
+-spec clear_config(port()) -> boolean().
+-spec clear_config_item(port(), iodata()) -> boolean().
+-spec config_file_name(port()) -> binary().
+-spec create(port(), iodata(), iodata(), iodata(), integer(), [binary()]) -> boolean().
+-spec daemonize(port(), 0 | 1) -> boolean().
+-spec defined(port()) -> boolean().
+-spec destroy(port()) -> boolean().
+-spec get_config_item(port(), iodata())  -> binary() | 'none'.
+-spec get_config_path(port()) -> binary().
+-spec get_keys(port(), iodata()) -> binary().
+-spec init_pid(port()) -> integer().
+-spec load_config(port(), iodata()) -> boolean().
+-spec name(port()) -> binary().
+-spec running(port()) -> boolean().
+-spec save_config(port(), iodata()) -> boolean().
+-spec set_config_item(port(), iodata(), iodata()) -> boolean().
+-spec set_config_path(port(), iodata()) -> boolean().
+-spec shutdown(port(), non_neg_integer()) -> boolean().
+-spec start(port(), 0 | 1, [binary()]) -> {ok, non_neg_integer()} | {error, file:posix()}.
+-spec state(port()) -> binary().
+-spec stop(port()) -> boolean().
+-spec wait(port(), iodata(), non_neg_integer()) -> boolean().
+-spec test_argv(port(), [binary()]) -> ok.
 ".

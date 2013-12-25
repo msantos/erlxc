@@ -38,8 +38,21 @@ The high level API models the container as an Erlang process.
 
 * tcpvm
 
-This code listens on a port for TCP connections and spawns a complete
-system running Ubuntu 12.04:
+This code listens on a TCP port and spawns an Ubuntu 12.04 system when
+a client connects.
+
+In a shell:
+```
+$ ./start.sh
+
+% If you're bridge is something other than lxcbr0
+> tcpvm:start([{config, [{"lxc.network.link", "br0"}]}]).
+```
+
+And in another shell:
+```
+nc localhost 31337
+```
 
 ```erlang
 -module(tcpvm).

@@ -51,12 +51,11 @@ startit() ->
     erlxc:spawn(Name, Config).
 
 stopit(Container) ->
-    liblxc:destroy(Container#container.pid),
-    erlxc_drv:stop(Container#container.pid).
+    erlxc_drv:stop(Container#container.port).
 
 erlxc_exit(Container) ->
     true = erlxc:exit(Container, kill),
-    Reply = liblxc:running(Container#container.pid),
+    Reply = liblxc:running(Container#container.port),
     ?_assertEqual(false, Reply).
 
 i2b(N) ->

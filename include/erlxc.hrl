@@ -11,6 +11,9 @@
 % ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 % OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 -record(container, {
-        pid,
+        port,
         console
     }).
+
+-define(ERLXC_MSG_SYNC, 0:4/unsigned-integer-unit:8).
+-define(ERLXC_MSG_ASYNC, 1:4/unsigned-integer-unit:8).
