@@ -810,5 +810,5 @@ erlxc_test_argv(erlxc_state_t *ep, ETERM *arg)
     for (i = 0; i < len; i++)
         (void)fprintf(stderr, "arg[%d]=%s", i, argv[i]);
 
-    return erl_mk_atom("ok");
+    return erlxc_bool(true);
 }

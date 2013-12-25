@@ -238,5 +238,5 @@ specs() ->
 -spec state(port()) -> binary().
 -spec stop(port()) -> boolean().
 -spec wait(port(), iodata(), non_neg_integer()) -> boolean().
--spec test_argv(port(), [binary()]) -> ok.
+-spec test_argv(port(), [binary()]) -> true.
 ".
