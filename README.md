@@ -54,6 +54,11 @@ And in another shell:
 nc localhost 31337
 ```
 
+Or if you have `socat` installed, start a session with job control:
+```
+socat `tty`,raw,echo=0 tcp:localhost:31337
+```
+
 ```erlang
 -module(tcpvm).
 -include_lib("erlxc/include/erlxc.hrl").
