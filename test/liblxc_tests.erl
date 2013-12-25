@@ -62,7 +62,7 @@ runit(Container) ->
 
 startit() ->
     N = binary:decode_unsigned(crypto:rand_bytes(1)),
-    Name = <<"erlxc", (i2b(N))/binary>>,
+    Name = <<"liblxc", (i2b(N))/binary>>,
     {ok, Container} = erlxc_drv:start(Name),
     Container.
 
@@ -106,7 +106,7 @@ list(Container, Type) ->
 
 name(Container) ->
     Reply = liblxc:name(Container),
-    ?_assertMatch(<<"erlxc", _/binary>>, Reply).
+    ?_assertMatch(<<"liblxc", _/binary>>, Reply).
 
 config_file_name(Container) ->
     Reply = liblxc:config_file_name(Container),
@@ -120,7 +120,7 @@ get_keys(Container) ->
 
 get_config_item(Container) ->
     Reply = liblxc:get_config_item(Container, <<"lxc.utsname">>),
-    ?_assertMatch(<<"erlxc", _/binary>>, Reply).
+    ?_assertMatch(<<"liblxc", _/binary>>, Reply).
 
 clear_config_item(Container) ->
     Item = liblxc:get_config_item(Container, <<"lxc.network">>),
