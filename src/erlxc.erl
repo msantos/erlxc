@@ -22,6 +22,11 @@
 spawn(Name) ->
     erlxc:spawn(Name, []).
 
+spawn(<<>>, Options) ->
+    % XXX possible to re-use container names
+    N = binary:decode_unsigned(crypto:rand_bytes(4)),
+    Name = <<"erlxc", (i2b(N))/binary>>,
+    erlxc:spawn(Name, Options);
 spawn(Name, Options) ->
     case erlxc_drv:start(Name, Options) of
         {ok, Container} ->
@@ -76,8 +81,14 @@ config(Container, Options) ->
 
     Config = proplists:get_value(config, Options, []),
 
-    [ true = liblxc:set_config_item(Container, Key, Value) ||
-        {Key, Value} <- Config ],
+    [ begin
+        case Item of
+            {Key, Value} ->
+                true = liblxc:set_config_item(Container, Key, Value);
+            Key ->
+                true = liblxc:clear_config_item(Container, Key)
+        end
+      end || Item <- Config ],
 
     true = liblxc:daemonize(Container, bool(Daemonize)),
 
@@ -98,3 +109,6 @@ bool(true) -> 1;
 bool(false) -> 0;
 bool(1) -> 1;
 bool(0) -> 0.
+
+i2b(N) ->
+    list_to_binary(integer_to_list(N)).
