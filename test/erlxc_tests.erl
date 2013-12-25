@@ -16,6 +16,7 @@
 -compile(export_all).
 
 -include_lib("eunit/include/eunit.hrl").
+-include_lib("erlxc/include/erlxc.hrl").
 
 erlxc_test_() ->
     {setup,
@@ -51,12 +52,12 @@ startit() ->
     Container.
 
 stopit(Container) ->
-    liblxc:destroy(Container),
-    erlxc_drv:stop(Container).
+    liblxc:destroy(Container#container.pid),
+    erlxc_drv:stop(Container#container.pid).
 
 erlxc_exit(Container) ->
     true = erlxc:exit(Container, kill),
-    Reply = liblxc:running(Container),
+    Reply = liblxc:running(Container#container.pid),
     ?_assertEqual(false, Reply).
 
 i2b(N) ->

@@ -11,9 +11,11 @@
 %%% ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 %%% OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 -module(erlxc).
+-include_lib("erlxc/include/erlxc.hrl").
 
 -export([
         spawn/1, spawn/2,
+        send/2,
         exit/2
     ]).
 
@@ -28,26 +30,30 @@ spawn(Name, Options) ->
             Error
     end.
 
-exit(Container, normal) ->
-    liblxc:shutdown(Container, 0);
+send(#container{console = Console}, Data) ->
+    erlxc_console:send(Console, Data).
 
-exit(Container, kill) ->
-    liblxc:stop(Container).
+exit(#container{pid = Pid}, normal) ->
+    liblxc:shutdown(Pid, 0);
+
+exit(#container{pid = Pid}, kill) ->
+    liblxc:stop(Pid).
 
 defined(Container, Options) ->
     case liblxc:defined(Container) of
         true ->
-            running(Container, Options);
+            running(Container, Options, fun config/2);
         false ->
             create(Container, Options)
     end.
 
-running(Container, Options) ->
+running(Container, Options, Fun) ->
     case liblxc:running(Container) of
         true ->
-            {ok, Container};
+            {ok, Console} = erlxc_console:start(liblxc:name(Container)),
+            {ok, #container{pid = Container, console = Console}};
         false ->
-            config(Container, Options)
+            Fun(Container, Options)
     end.
 
 create(Container, Options) ->
@@ -83,12 +89,7 @@ start(Container, Options) ->
 
     case liblxc:start(Container, bool(UseInit), Path) of
         {ok, _} ->
-            case liblxc:running(Container) of
-                true ->
-                    {ok, Container};
-                false ->
-                    erlang:exit(badarg)
-            end;
+            running(Container, Options, fun(_,_) -> erlang:exit(badarg) end);
         Error ->
             Error
     end.
