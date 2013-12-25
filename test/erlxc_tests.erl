@@ -48,8 +48,7 @@ startit() ->
             {<<"lxc.network.link">>, Bridge}
         ]}],
 
-    {ok, Container} = erlxc:spawn(Name, Config),
-    Container.
+    erlxc:spawn(Name, Config).
 
 stopit(Container) ->
     liblxc:destroy(Container#container.pid),

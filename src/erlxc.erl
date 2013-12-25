@@ -19,6 +19,10 @@
         exit/2
     ]).
 
+-type container() :: #container{pid::pid(),console::port()}.
+
+-spec spawn(iodata()) -> container().
+-spec spawn(iodata(),list()) -> container().
 spawn(Name) ->
     erlxc:spawn(Name, []).
 
@@ -35,9 +39,11 @@ spawn(Name, Options) ->
             Error
     end.
 
+-spec send(container(),iodata()) -> 'true'.
 send(#container{console = Console}, Data) ->
     erlxc_console:send(Console, Data).
 
+-spec exit(container(),'kill' | 'normal') -> boolean().
 exit(#container{pid = Pid}, normal) ->
     liblxc:shutdown(Pid, 0);
 
@@ -56,7 +62,7 @@ running(Container, Options, Fun) ->
     case liblxc:running(Container) of
         true ->
             {ok, Console} = erlxc_console:start(liblxc:name(Container)),
-            {ok, #container{pid = Container, console = Console}};
+            #container{pid = Container, console = Console};
         false ->
             Fun(Container, Options)
     end.
@@ -69,12 +75,8 @@ create(Container, Options) ->
     Flags = proplists:get_value(flags, Create, <<>>),
     Argv = proplists:get_value(argv, Create, []),
 
-    case liblxc:create(Container, Template, Bdevtype, Bdevspec, Flags, Argv) of
-        true ->
-            config(Container, Options);
-        false ->
-            {error, einval}
-    end.
+    true = liblxc:create(Container, Template, Bdevtype, Bdevspec, Flags, Argv),
+    config(Container, Options).
 
 config(Container, Options) ->
     Daemonize = proplists:get_value(daemonize, Options, false),
@@ -98,12 +100,8 @@ start(Container, Options) ->
     UseInit = proplists:get_value(useinit, Options, false),
     Path = proplists:get_value(path, Options, []),
 
-    case liblxc:start(Container, bool(UseInit), Path) of
-        {ok, _} ->
-            running(Container, Options, fun(_,_) -> erlang:exit(badarg) end);
-        Error ->
-            Error
-    end.
+    {ok, _} = liblxc:start(Container, bool(UseInit), Path),
+    running(Container, Options, fun(_,_) -> erlang:exit(badarg) end).
 
 bool(true) -> 1;
 bool(false) -> 0;
