@@ -18,6 +18,8 @@
 -export([send/2]).
 -export([getopts/1]).
 
+-spec start(nonempty_string() | binary()) -> {'ok',port()}.
+-spec start(nonempty_string() | binary(),[atom() | tuple()]) -> {'ok',port()}.
 start(Name) ->
     start(Name, []).
 start(Name, Options) when is_list(Options) ->
