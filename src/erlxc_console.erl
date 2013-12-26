@@ -47,7 +47,7 @@ getopts(Options) when is_list(Options) ->
     Cmd0 = [ N || N <- [Exec, Progname|Switches], N /= ""],
     Cmd = quote(string:join(Cmd0, " ")),
 
-    string:join(["script", "-q", "-c", Cmd, "/dev/null"], " ").
+    string:join(["script", "-q", "-c", Cmd, "/dev/null", "2>", "/dev/null"], " ").
 
 optarg({name, Arg})         -> switch("n", Arg);
 optarg({path, Arg})         -> switch("P", Arg);
