@@ -60,7 +60,7 @@ defined(Container, Options) ->
 running(Container, Options, Fun) ->
     case liblxc:running(Container) of
         true ->
-            {ok, Console} = erlxc_console:start(liblxc:name(Container)),
+            Console = erlxc_console:start(liblxc:name(Container)),
             #container{port = Container, console = Console};
         false ->
             Fun(Container, Options)
