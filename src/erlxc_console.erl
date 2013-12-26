@@ -24,7 +24,11 @@ start(Name) ->
     start(Name, []).
 start(Name, Options) when is_list(Options) ->
     Cmd = getopts([{name, Name}] ++ Options),
-    open_port({spawn, Cmd}, [stream,binary]).
+    Port = open_port({spawn, Cmd}, [stream,binary]),
+    receive
+        {Port, {data,_}} ->
+            Port
+    end.
 
 send(Container, Data) when is_port(Container) ->
     erlang:port_command(Container, Data).
