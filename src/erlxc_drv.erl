@@ -19,8 +19,8 @@
 -export([call/2, encode/2, event/1]).
 -export([getopts/1]).
 
--spec start(iodata()) -> port().
--spec start(iodata(),[atom() | tuple()]) -> port().
+-spec start(nonempty_string() | binary()) -> port().
+-spec start(nonempty_string() | binary(),[atom() | tuple()]) -> port().
 start(Name) ->
     start(Name, []).
 start(Name, Options) ->

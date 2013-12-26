@@ -24,8 +24,8 @@
 
 -type container() :: #container{port::port(),console::port()}.
 
--spec spawn(iodata()) -> container().
--spec spawn(iodata(),list()) -> container().
+-spec spawn(string() | binary()) -> container().
+-spec spawn(string() | binary(),list()) -> container().
 spawn(Name) ->
     erlxc:spawn(Name, []).
 
