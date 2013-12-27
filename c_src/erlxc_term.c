@@ -66,3 +66,19 @@ erlxc_list_head(ETERM **hd, ETERM *list)
     *hd = erl_hd(list);
     return erl_tl(list);
 }
+
+    void *
+erlxc_malloc(ssize_t size)
+{
+    void *buf = NULL;
+
+    if (size < 0 || size >= INT32_MAX)
+        erl_err_quit("malloc:invalid size:%ld", size);
+
+    buf = erl_malloc(size);
+
+    if (!buf)
+        erl_err_quit("malloc");
+
+    return buf;
+}

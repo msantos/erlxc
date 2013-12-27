@@ -546,9 +546,7 @@ erlxc_lxc_container_get_config_item(erlxc_state_t *ep, ETERM *arg)
     }
 
     /* account for null */
-    buf = erl_malloc(n+1);
-    if (!buf)
-        goto BADARG;
+    buf = erlxc_malloc(n+1);
 
     (void)c->get_config_item(c, key, buf, n+1);
 
@@ -712,7 +710,7 @@ erlxc_list_containers(erlxc_state_t *ep, ETERM *arg,
     if (n < 0)
         return erlxc_errno(errnum);
 
-    reply = erl_malloc(n * sizeof(ETERM **));
+    reply = erlxc_malloc(n * sizeof(ETERM **));
     for (i = 0; i < n; i++) {
         reply[i] = erl_mk_binary(names[i], strnlen(names[i], MAXHOSTNAMELEN));
         free(names[i]);

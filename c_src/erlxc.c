@@ -160,13 +160,8 @@ erlxc_msg(erlxc_state_t *ep)
 
     len -= 4;
 
-    msg = erl_malloc(sizeof(erlxc_msg_t));
-    if (!msg)
-        erl_err_sys("erl_malloc");
-
-    msg->arg = erl_malloc(len);
-    if (!msg->arg)
-        erl_err_sys("erl_malloc");
+    msg = erlxc_malloc(sizeof(erlxc_msg_t));
+    msg->arg = erlxc_malloc(len);
 
     n = erlxc_read(&buf, sizeof(buf));
     if (n != sizeof(buf))
@@ -198,9 +193,7 @@ erlxc_write(int type, ETERM *t)
     tlen = erl_term_len(t);
     hlen = ntohl(tlen+sizeof(type));
 
-    buf = erl_malloc(tlen);
-    if (!buf)
-        return -1;
+    buf = erlxc_malloc(tlen);
 
     if (erl_encode(t, buf) < 1)
         goto ERR;
