@@ -185,12 +185,14 @@ erlxc_send(ETERM *t)
     static int
 erlxc_write(int type, ETERM *t)
 {
-    int tlen = 0;
-    int hlen = 0;
+    ssize_t tlen = 0;
+    size_t hlen = 0;
     unsigned char *buf = NULL;
 
-    /* XXX overflow */
     tlen = erl_term_len(t);
+    if (tlen < 0 || tlen+sizeof(type) >= MAXBUFLEN)
+        goto ERR;
+
     hlen = ntohl(tlen+sizeof(type));
 
     buf = erlxc_malloc(tlen);
