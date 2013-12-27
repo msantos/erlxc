@@ -32,8 +32,6 @@ runit(Container) ->
 
 startit() ->
     Bridge = getenv("ERLXC_TEST_BRIDGE", <<"lxcbr0">>),
-    N = binary:decode_unsigned(crypto:rand_bytes(1)),
-    Name = <<"erlxc", (i2b(N))/binary>>,
 
     % XXX this fails if ERLXC_TEST_BRIDGE=br0
 %    Config = [{config, [
@@ -48,7 +46,7 @@ startit() ->
             {<<"lxc.network.link">>, Bridge}
         ]}],
 
-    erlxc:spawn(Name, Config).
+    erlxc:spawn(<<>>, Config).
 
 stopit(Container) ->
     erlxc_drv:stop(Container#container.port).
@@ -57,9 +55,6 @@ erlxc_exit(Container) ->
     true = erlxc:exit(Container, kill),
     Reply = liblxc:running(Container#container.port),
     ?_assertEqual(false, Reply).
-
-i2b(N) ->
-    list_to_binary(integer_to_list(N)).
 
 getenv(Var, Default) ->
     case os:getenv(Var) of
