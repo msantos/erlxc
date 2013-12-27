@@ -55,7 +55,7 @@ typedef struct {
 
 int erlxc_send(ETERM *t);
 
-void * erlxc_malloc(ssize_t size);
+void *erlxc_malloc(ssize_t size);
 
 ETERM *erlxc_list_head(ETERM **, ETERM *);
 ETERM *erlxc_tuple2(ETERM *, ETERM *);

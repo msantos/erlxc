@@ -14,7 +14,7 @@
 -include_lib("erlxc/include/erlxc.hrl").
 
 -export([
-        spawn/1, spawn/2,
+        spawn/0, spawn/1, spawn/2,
         send/2,
         exit/2
     ]).
@@ -24,8 +24,12 @@
 
 -type container() :: #container{port::port(),console::port()}.
 
+-spec spawn() -> container().
 -spec spawn(string() | binary()) -> container().
 -spec spawn(string() | binary(),list()) -> container().
+spawn() ->
+    erlxc:spawn(<<>>, []).
+
 spawn(Name) ->
     erlxc:spawn(Name, []).
 
