@@ -99,7 +99,7 @@ start(Container, Options) ->
     UseInit = proplists:get_value(useinit, Options, false),
     Path = proplists:get_value(path, Options, []),
 
-    {ok, _} = liblxc:start(Container, bool(UseInit), Path),
+    true = liblxc:start(Container, bool(UseInit), Path),
     running(Container, Options, fun(_,_) -> erlang:exit(badarg) end).
 
 bool(true) -> 1;

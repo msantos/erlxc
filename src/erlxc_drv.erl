@@ -27,7 +27,7 @@ start(Name, Options) ->
     Cmd = getopts([{name, Name}] ++ Options),
     open_port({spawn, Cmd}, [{packet, 4}, binary]).
 
--spec call(port(),binary()) -> 'none' | 'badarg' | boolean() | iodata() | integer() | {ok, integer()} | {error, integer()}.
+-spec call(port(),binary()) -> 'none' | boolean() | iodata() | integer().
 call(Port, Data) when is_port(Port), is_binary(Data), byte_size(Data) < 16#ffff ->
     true = erlang:port_command(Port, Data),
     Reply = receive
@@ -39,7 +39,7 @@ call(Port, Data) when is_port(Port), is_binary(Data), byte_size(Data) < 16#ffff 
         _ -> Reply
     end.
 
--spec event(port()) -> {ok, integer()} | {error, integer()}.
+-spec event(port()) -> {start, boolean()}.
 event(Port) when is_port(Port) ->
     receive
         {Port, {data, <<?ERLXC_MSG_ASYNC, Msg/binary>>}} ->

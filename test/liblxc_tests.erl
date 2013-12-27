@@ -94,7 +94,7 @@ destroy(Container) ->
 
 start(Container) ->
     Reply = liblxc:start(Container),
-    ?_assertMatch({ok,_}, Reply).
+    ?_assertMatch(true, Reply).
 
 stop(Container) ->
     Reply = liblxc:stop(Container),

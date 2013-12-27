@@ -234,7 +234,7 @@ specs() ->
 -spec set_config_item(port(), iodata(), iodata()) -> boolean().
 -spec set_config_path(port(), iodata()) -> boolean().
 -spec shutdown(port(), non_neg_integer()) -> boolean().
--spec start(port(), 0 | 1, [binary()]) -> {ok, non_neg_integer()} | {error, file:posix()}.
+-spec start(port(), 0 | 1, [binary()]) -> boolean().
 -spec state(port()) -> binary().
 -spec stop(port()) -> boolean().
 -spec wait(port(), iodata(), non_neg_integer()) -> boolean().

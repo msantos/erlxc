@@ -252,8 +252,6 @@ erlxc_lxc_container_start(erlxc_state_t *ep, ETERM *arg)
     int useinit = 0;
     char **argv = NULL;
     bool res;
-    int errnum = 0;
-    pid_t pid = -1;
 
     if (!c)
         return erl_mk_atom("badarg");
@@ -279,14 +277,11 @@ erlxc_lxc_container_start(erlxc_state_t *ep, ETERM *arg)
     if (!lxc_container_get(c))
         goto BADARG;
 
-    pid = fork();
-
-    switch (pid) {
+    switch (fork()) {
         case -1:
-            return erlxc_errno(errnum);
-        case 0: {
-            ETERM *t = NULL;
-
+            res = false;
+            break;
+        case 0:
             if (prctl(PR_SET_PDEATHSIG, SIGKILL) < 0)
                 erl_err_sys("signal");
 
@@ -294,19 +289,17 @@ erlxc_lxc_container_start(erlxc_state_t *ep, ETERM *arg)
 
             erlxc_lxc_container_put(ep);
 
-            t = erlxc_tuple2(
-                    (res ? erl_mk_atom("ok") : erl_mk_atom("error")),
-                    erl_mk_int(getpid())
-                );
-
-            (void)erlxc_send(t);
+            (void)erlxc_send(erlxc_tuple2(erl_mk_atom("start"),
+                        erlxc_bool(res)));
             exit (0);
-        }
         default:
-            erlxc_lxc_container_put(ep);
-            erlxc_free_argv(argv);
-            return erlxc_tuple2(erl_mk_atom("ok"), erl_mk_int(pid));
+            res = true;
+            break;
     }
+
+    erlxc_lxc_container_put(ep);
+    erlxc_free_argv(argv);
+    return erlxc_bool(res);
 
 BADARG:
     erlxc_free_argv(argv);
