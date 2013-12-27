@@ -434,7 +434,6 @@ erlxc_lxc_container_get_keys(erlxc_state_t *ep, ETERM *arg)
     if (!key)
         len = c->get_keys(c, NULL, NULL, 0);
 
-    /* XXX better error if length is too large */
     if (len < 0 || len >= sizeof(buf))
         goto BADARG;
 
@@ -728,11 +727,19 @@ BADARG:
 erlxc_list_to_argv(ETERM *arg)
 {
     ETERM *hd = NULL;
-    int len = 0; /* XXX overflow */
+    ssize_t len = 0;
     int i = 0;
     char **argv = NULL;
 
     len = erl_length(arg);
+
+    /* xargs --show-limits
+     *
+     * POSIX smallest allowable upper limit on argument length (all
+     * systems): 4096
+     */
+    if (len < 0 || len >= 4096)
+        return NULL;
 
     /* NULL terminate */
     argv = calloc(len + 1, sizeof(char **));
