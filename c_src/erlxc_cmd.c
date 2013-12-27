@@ -73,7 +73,7 @@ erlxc_lxc_container_wait(erlxc_state_t *ep, ETERM *arg)
 
     /* state */
     arg = erlxc_list_head(&hd, arg);
-    if (!hd)
+    if (!hd || !ERLXC_IS_IOLIST(hd))
         goto BADARG;
 
     if (erl_iolist_length(hd) > 0)
@@ -84,7 +84,7 @@ erlxc_lxc_container_wait(erlxc_state_t *ep, ETERM *arg)
 
     /* timeout */
     arg = erlxc_list_head(&hd, arg);
-    if (!hd)
+    if (!hd || !ERL_IS_INTEGER(hd))
         goto BADARG;
 
     timeout = ERL_INT_VALUE(hd);
@@ -111,7 +111,7 @@ erlxc_lxc_container_daemonize(erlxc_state_t *ep, ETERM *arg)
 
     /* state */
     arg = erlxc_list_head(&hd, arg);
-    if (!hd)
+    if (!hd || !ERL_IS_INTEGER(hd))
         goto BADARG;
 
     state = ERL_INT_VALUE(hd);
@@ -150,7 +150,7 @@ erlxc_lxc_container_create(erlxc_state_t *ep, ETERM *arg)
 
     /* template */
     arg = erlxc_list_head(&hd, arg);
-    if (!hd)
+    if (!hd || !ERLXC_IS_IOLIST(hd))
         goto BADARG;
 
     if (erl_iolist_length(hd) > 0)
@@ -161,7 +161,7 @@ erlxc_lxc_container_create(erlxc_state_t *ep, ETERM *arg)
 
     /* bdevtype */
     arg = erlxc_list_head(&hd, arg);
-    if (!hd)
+    if (!hd || !ERLXC_IS_IOLIST(hd))
         goto BADARG;
 
     if (erl_iolist_length(hd) > 0)
@@ -174,7 +174,7 @@ erlxc_lxc_container_create(erlxc_state_t *ep, ETERM *arg)
 
     /* flags */
     arg = erlxc_list_head(&hd, arg);
-    if (!hd)
+    if (!hd || !ERL_IS_INTEGER(hd))
         goto BADARG;
 
     flags = ERL_INT_VALUE(hd);
@@ -182,7 +182,7 @@ erlxc_lxc_container_create(erlxc_state_t *ep, ETERM *arg)
 
     /* argv */
     arg = erlxc_list_head(&hd, arg);
-    if (!hd)
+    if (!hd || !ERL_IS_LIST(hd))
         goto BADARG;
 
     if (!ERL_IS_EMPTY_LIST(hd)) {
@@ -316,7 +316,7 @@ erlxc_lxc_container_load_config(erlxc_state_t *ep, ETERM *arg)
     char *path = NULL;
 
     arg = erlxc_list_head(&hd, arg);
-    if (!hd)
+    if (!hd || !ERLXC_IS_IOLIST(hd))
         goto BADARG;
 
     if (erl_iolist_length(hd) > 0) {
@@ -339,7 +339,7 @@ erlxc_lxc_container_save_config(erlxc_state_t *ep, ETERM *arg)
     char *path = NULL;
 
     arg = erlxc_list_head(&hd, arg);
-    if (!hd)
+    if (!hd || !ERLXC_IS_IOLIST(hd))
         goto BADARG;
 
     if (erl_iolist_length(hd) > 0)
@@ -365,7 +365,7 @@ erlxc_lxc_container_get_keys(erlxc_state_t *ep, ETERM *arg)
     int len = 0;
 
     arg = erlxc_list_head(&hd, arg);
-    if (!hd)
+    if (!hd || !ERLXC_IS_IOLIST(hd))
         goto BADARG;
 
     if (erl_iolist_length(hd) > 0) {
@@ -397,11 +397,7 @@ erlxc_lxc_container_config_file_name(erlxc_state_t *ep, ETERM *arg)
     char *name = NULL;
 
     name = c->config_file_name(c);
-    if (!name)
-        return erl_mk_binary("",0);
-
     free(name);
-
     return erlxc_bin(name);
 }
 
@@ -422,7 +418,7 @@ erlxc_lxc_container_clear_config_item(erlxc_state_t *ep, ETERM *arg)
 
     /* key */
     arg = erlxc_list_head(&hd, arg);
-    if (!hd)
+    if (!hd || !ERLXC_IS_IOLIST(hd))
         goto BADARG;
 
     if (erl_iolist_length(hd) > 0)
@@ -455,7 +451,7 @@ erlxc_lxc_container_get_config_item(erlxc_state_t *ep, ETERM *arg)
 
     /* key */
     arg = erlxc_list_head(&hd, arg);
-    if (!hd)
+    if (!hd || !ERLXC_IS_IOLIST(hd))
         goto BADARG;
 
     if (erl_iolist_length(hd) > 0)
@@ -503,7 +499,7 @@ erlxc_lxc_container_set_config_item(erlxc_state_t *ep, ETERM *arg)
 
     /* key */
     arg = erlxc_list_head(&hd, arg);
-    if (!hd)
+    if (!hd || !ERLXC_IS_IOLIST(hd))
         goto BADARG;
 
     if (erl_iolist_length(hd) > 0)
@@ -514,7 +510,7 @@ erlxc_lxc_container_set_config_item(erlxc_state_t *ep, ETERM *arg)
 
     /* value */
     arg = erlxc_list_head(&hd, arg);
-    if (!hd)
+    if (!hd || !ERLXC_IS_IOLIST(hd))
         goto BADARG;
 
     if (erl_iolist_length(hd) > 0) {
@@ -553,7 +549,7 @@ erlxc_lxc_container_set_config_path(erlxc_state_t *ep, ETERM *arg)
 
     /* path */
     arg = erlxc_list_head(&hd, arg);
-    if (!hd)
+    if (!hd || !ERLXC_IS_IOLIST(hd))
         goto BADARG;
 
     if (erl_iolist_length(hd) > 0)
@@ -598,10 +594,9 @@ erlxc_list_containers(erlxc_state_t *ep, ETERM *arg,
     char *path = NULL;
     char **names = NULL;
     ETERM **reply = NULL;
-    int errnum = 0;
 
     arg = erlxc_list_head(&hd, arg);
-    if (!hd)
+    if (!hd || !ERLXC_IS_IOLIST(hd))
         goto BADARG;
 
     if (erl_iolist_length(hd) > 0) {
@@ -610,15 +605,12 @@ erlxc_list_containers(erlxc_state_t *ep, ETERM *arg,
             goto BADARG;
     }
 
-    errno = 0;
     n = fun(path, &names, NULL);
-    errnum = errno;
 
-    //erl_free_term(arg1);
     erl_free(path);
 
     if (n < 0)
-        return erlxc_errno(errnum);
+        goto BADARG;
 
     reply = erlxc_malloc(n * sizeof(ETERM **));
     for (i = 0; i < n; i++) {

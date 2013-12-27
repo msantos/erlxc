@@ -75,7 +75,7 @@ create(Container, Options) ->
     Template = proplists:get_value(template, Create, <<"ubuntu">>),
     Bdevtype = proplists:get_value(bdevtype, Create, <<>>),
     Bdevspec = proplists:get_value(bdevspec, Create, <<>>),
-    Flags = proplists:get_value(flags, Create, <<>>),
+    Flags = proplists:get_value(flags, Create, 0),
     Argv = proplists:get_value(argv, Create, []),
 
     true = liblxc:create(Container, Template, Bdevtype, Bdevspec, Flags, Argv),
