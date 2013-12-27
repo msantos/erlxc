@@ -216,7 +216,7 @@ specs() ->
 -spec list_active_containers(port(), iodata()) -> [binary()].
 -spec list_all_containers(port(), iodata()) -> [binary()].
 -spec list_defined_containers(port(), iodata()) -> [binary()].
--spec clear_config(port()) -> boolean().
+-spec clear_config(port()) -> 'true'.
 -spec clear_config_item(port(), iodata()) -> boolean().
 -spec config_file_name(port()) -> binary().
 -spec create(port(), iodata(), iodata(), iodata(), integer(), [binary()]) -> boolean().
