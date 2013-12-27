@@ -353,8 +353,7 @@ erlxc_lxc_container_init_pid(erlxc_state_t *ep, ETERM *arg)
 
     pid = c->init_pid(c);
 
-    /* XXX overflow pid_t -> int */
-    return erl_mk_int(pid);
+    return erl_mk_longlong(pid);
 }
 
     static ETERM *
