@@ -200,11 +200,15 @@ erlxc_lxc_container_create(erlxc_state_t *ep, ETERM *arg)
             argv
             );
 
+    erl_free(t);
+    erl_free(bdevtype);
     erlxc_free_argv(argv);
 
     return erlxc_bool(res);
 
 BADARG:
+    erl_free(t);
+    erl_free(bdevtype);
     erlxc_free_argv(argv);
     return erl_mk_atom("badarg");
 }
@@ -325,9 +329,12 @@ erlxc_lxc_container_load_config(erlxc_state_t *ep, ETERM *arg)
             goto BADARG;
     }
 
+    erl_free(path);
+
     return erlxc_bool(c->load_config(c, path));
 
 BADARG:
+    erl_free(path);
     return erl_mk_atom("badarg");
 }
 
@@ -348,9 +355,12 @@ erlxc_lxc_container_save_config(erlxc_state_t *ep, ETERM *arg)
     if (!path)
         goto BADARG;
 
+    erl_free(path);
+
     return erlxc_bool(c->save_config(c, path));
 
 BADARG:
+    erl_free(path);
     return erl_mk_atom("badarg");
 }
 
@@ -563,6 +573,7 @@ erlxc_lxc_container_set_config_path(erlxc_state_t *ep, ETERM *arg)
     return erlxc_bool(res);
 
 BADARG:
+    erl_free(path);
     return erl_mk_atom("badarg");
 }
 
@@ -594,6 +605,7 @@ erlxc_list_containers(erlxc_state_t *ep, ETERM *arg,
     char *path = NULL;
     char **names = NULL;
     ETERM **reply = NULL;
+    ETERM *t = NULL;
 
     arg = erlxc_list_head(&hd, arg);
     if (!hd || !ERLXC_IS_IOLIST(hd))
@@ -608,6 +620,7 @@ erlxc_list_containers(erlxc_state_t *ep, ETERM *arg,
     n = fun(path, &names, NULL);
 
     erl_free(path);
+    path = NULL;
 
     if (n < 0)
         goto BADARG;
@@ -621,9 +634,12 @@ erlxc_list_containers(erlxc_state_t *ep, ETERM *arg,
     if (n > 0)
         free(names);
 
-    return erl_mk_list(reply, n);
+    t = erl_mk_list(reply, n);
+    erl_free(reply);
+    return t;
 
 BADARG:
+    erl_free(path);
     return erl_mk_atom("badarg");
 }
 
