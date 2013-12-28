@@ -25,7 +25,7 @@ start(Name) ->
     start(Name, []).
 start(Name, Options) ->
     Cmd = getopts([{name, Name}] ++ Options),
-    open_port({spawn, Cmd}, [{packet, 4}, binary]).
+    open_port({spawn, Cmd}, [{packet, 2}, binary]).
 
 -spec call(port(),binary()) -> 'none' | boolean() | iodata() | integer().
 call(Port, Data) when is_port(Port), is_binary(Data), byte_size(Data) < 16#ffff ->
@@ -49,9 +49,9 @@ event(Port) when is_port(Port) ->
             false
     end.
 
--spec encode(integer(),list()) -> <<_:32,_:_*8>>.
+-spec encode(integer(),list()) -> <<_:16,_:_*8>>.
 encode(Command, Arg) when is_integer(Command), is_list(Arg) ->
-    <<Command:4/unsigned-integer-unit:8, (term_to_binary(Arg))/binary>>.
+    <<Command:2/unsigned-integer-unit:8, (term_to_binary(Arg))/binary>>.
 
 stop(Port) when is_port(Port) ->
     erlang:port_close(Port).

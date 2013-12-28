@@ -15,5 +15,5 @@
         console
     }).
 
--define(ERLXC_MSG_SYNC, 0:4/unsigned-integer-unit:8).
--define(ERLXC_MSG_ASYNC, 1:4/unsigned-integer-unit:8).
+-define(ERLXC_MSG_SYNC, 0:2/unsigned-integer-unit:8).
+-define(ERLXC_MSG_ASYNC, 1:2/unsigned-integer-unit:8).

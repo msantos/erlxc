@@ -15,13 +15,13 @@
 #include "erlxc.h"
 
 #define ERLXC_MSG_SYNC  0
-#define ERLXC_MSG_ASYNC (htonl(1))
+#define ERLXC_MSG_ASYNC (htons(1))
 
 static void erlxc_loop(erlxc_state_t *);
 static erlxc_msg_t *erlxc_msg(erlxc_state_t *);
 static void usage(erlxc_state_t *);
 
-static int erlxc_write(int type, ETERM *t);
+static int erlxc_write(u_int16_t, ETERM *);
 static ssize_t erlxc_read(void *, ssize_t);
 
 extern char *__progname;
@@ -137,8 +137,8 @@ erlxc_loop(erlxc_state_t *ep)
 erlxc_msg(erlxc_state_t *ep)
 {
     ssize_t n = 0;
-    u_int32_t buf = 0;
-    u_int32_t len = 0;
+    u_int16_t buf = 0;
+    u_int16_t len = 0;
     erlxc_msg_t *msg = NULL;
 
     errno = 0;
@@ -151,14 +151,14 @@ erlxc_msg(erlxc_state_t *ep)
         erl_err_sys("erlxc_msg: expected=%lu, got=%lu", sizeof(buf), n);
     }
     
-    len = ntohl(buf);
+    len = ntohs(buf);
     
     VERBOSE(2, "erlxc_msg: packet len = %u", len);
     
-    if (len >= MAXBUFLEN || len < 4)
-        erl_err_quit("erlxc_msg: invalid len=%d (max=%d)", len, MAXBUFLEN);
+    if (len >= UINT16_MAX || len < 2)
+        erl_err_quit("erlxc_msg: invalid len=%d (max=%d)", len, UINT16_MAX);
 
-    len -= 4;
+    len -= 2;
 
     msg = erlxc_malloc(sizeof(erlxc_msg_t));
     msg->arg = erlxc_malloc(len);
@@ -167,7 +167,7 @@ erlxc_msg(erlxc_state_t *ep)
     if (n != sizeof(buf))
         erl_err_sys("erlxc_msg: expected=%lu, got=%lu", sizeof(buf), n);
 
-    msg->cmd = ntohl(buf);
+    msg->cmd = ntohs(buf);
 
     n = erlxc_read(msg->arg, len);
     if (n != len)
@@ -183,17 +183,17 @@ erlxc_send(ETERM *t)
 }
 
     static int
-erlxc_write(int type, ETERM *t)
+erlxc_write(u_int16_t type, ETERM *t)
 {
-    ssize_t tlen = 0;
-    size_t hlen = 0;
+    int tlen = 0;
+    int hlen = 0;
     unsigned char *buf = NULL;
 
     tlen = erl_term_len(t);
-    if (tlen < 0 || tlen+sizeof(type) >= MAXBUFLEN)
+    if (tlen < 0 || tlen+sizeof(type) >= UINT16_MAX)
         goto ERR;
 
-    hlen = ntohl(tlen+sizeof(type));
+    hlen = ntohs(tlen+sizeof(type));
 
     buf = erlxc_malloc(tlen);
 
@@ -202,8 +202,8 @@ erlxc_write(int type, ETERM *t)
 
     flockfile(stdout);
 
-    if ( (write(STDOUT_FILENO, &hlen, 4) != 4) ||
-         (write(STDOUT_FILENO, &type, 4) != 4) ||
+    if ( (write(STDOUT_FILENO, &hlen, 2) != 2) ||
+         (write(STDOUT_FILENO, &type, 2) != 2) ||
          (write(STDOUT_FILENO, buf, tlen) != tlen))
         goto ERR;
 
