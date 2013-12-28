@@ -318,6 +318,7 @@ erlxc_lxc_container_load_config(erlxc_state_t *ep, ETERM *arg)
     ETERM *hd = NULL;
     struct lxc_container *c = ep->c;
     char *path = NULL;
+    bool res;
 
     arg = erlxc_list_head(&hd, arg);
     if (!hd || !ERLXC_IS_IOLIST(hd))
@@ -329,9 +330,11 @@ erlxc_lxc_container_load_config(erlxc_state_t *ep, ETERM *arg)
             goto BADARG;
     }
 
+    res = c->load_config(c, path);
+
     erl_free(path);
 
-    return erlxc_bool(c->load_config(c, path));
+    return erlxc_bool(res);
 
 BADARG:
     erl_free(path);
@@ -394,6 +397,8 @@ erlxc_lxc_container_get_keys(erlxc_state_t *ep, ETERM *arg)
         goto BADARG;
 
     n = c->get_keys(c, key, buf, (key ? sizeof(buf) : len+1));
+
+    erl_free(key);
 
     return (n > 0 ? erl_mk_binary(buf, n) : erl_mk_binary("",0));
 
