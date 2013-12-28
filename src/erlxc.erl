@@ -90,6 +90,8 @@ config(Container, Options) ->
         case Item of
             {Key, Value} ->
                 true = liblxc:set_config_item(Container, Key, Value);
+            <<>> ->
+                true = liblxc:clear_config(Container);
             Key ->
                 true = liblxc:clear_config_item(Container, Key)
         end
