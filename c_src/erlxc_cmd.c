@@ -344,6 +344,7 @@ erlxc_lxc_container_save_config(erlxc_state_t *ep, ETERM *arg)
     ETERM *hd = NULL;
     struct lxc_container *c = ep->c;
     char *path = NULL;
+    bool res;
 
     arg = erlxc_list_head(&hd, arg);
     if (!hd || !ERLXC_IS_IOLIST(hd))
@@ -355,9 +356,11 @@ erlxc_lxc_container_save_config(erlxc_state_t *ep, ETERM *arg)
     if (!path)
         goto BADARG;
 
+    res = c->save_config(c, path);
+
     erl_free(path);
 
-    return erlxc_bool(c->save_config(c, path));
+    return erlxc_bool(res);
 
 BADARG:
     erl_free(path);
