@@ -56,18 +56,18 @@ exit(#container{port = Port}, kill) ->
 defined(Container, Options) ->
     case liblxc:defined(Container) of
         true ->
-            running(Container, Options, fun config/2);
+            running(Container, Options);
         false ->
             create(Container, Options)
     end.
 
-running(Container, Options, Fun) ->
+running(Container, Options) ->
     case liblxc:running(Container) of
         true ->
             Console = erlxc_console:start(liblxc:name(Container)),
             #container{port = Container, console = Console};
         false ->
-            Fun(Container, Options)
+            config(Container, Options)
     end.
 
 create(Container, Options) ->
@@ -104,9 +104,12 @@ config(Container, Options) ->
 start(Container, Options) ->
     UseInit = proplists:get_value(useinit, Options, false),
     Path = proplists:get_value(path, Options, []),
+    Timeout = proplists:get_value(timeout, Options, 120),
 
     true = liblxc:start(Container, bool(UseInit), Path),
-    running(Container, Options, fun(_,_) -> erlang:exit(badarg) end).
+    true = liblxc:wait(Container, <<"RUNNING">>, Timeout),
+    Console = erlxc_console:start(liblxc:name(Container)),
+    #container{port = Container, console = Console}.
 
 bool(true) -> 1;
 bool(false) -> 0;
