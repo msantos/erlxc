@@ -155,10 +155,10 @@ erlxc_msg(erlxc_state_t *ep)
     
     VERBOSE(2, "erlxc_msg: packet len = %u", len);
     
-    if (len >= UINT16_MAX || len < 2)
+    if (len >= UINT16_MAX || len < sizeof(buf))
         erl_err_quit("erlxc_msg: invalid len=%d (max=%d)", len, UINT16_MAX);
 
-    len -= 2;
+    len -= sizeof(buf);
 
     msg = erlxc_malloc(sizeof(erlxc_msg_t));
     msg->arg = erlxc_malloc(len);
@@ -186,7 +186,7 @@ erlxc_send(ETERM *t)
 erlxc_write(u_int16_t type, ETERM *t)
 {
     int tlen = 0;
-    int hlen = 0;
+    u_int16_t hlen = 0;
     unsigned char *buf = NULL;
 
     tlen = erl_term_len(t);
