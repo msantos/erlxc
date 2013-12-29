@@ -19,9 +19,6 @@
         exit/2
     ]).
 
-% Can be overriden by caller
--define(SPAWN_DEFAULT, [destroy]).
-
 -type container() :: #container{port::port(),console::port()}.
 
 -spec spawn() -> container().
@@ -39,8 +36,8 @@ spawn(<<>>, Options) ->
     Name = <<"erlxc", (i2b(N))/binary>>,
     erlxc:spawn(Name, Options);
 spawn(Name, Options) ->
-    Container = erlxc_drv:start(Name, ?SPAWN_DEFAULT ++ Options),
-    defined(Container, Options).
+    Port = erlxc_drv:start(Name, [destroy] ++ Options),
+    state(#container{port = Port}, Options).
 
 -spec send(container(),iodata()) -> 'true'.
 send(#container{console = Console}, Data) ->
@@ -53,64 +50,82 @@ exit(#container{port = Port}, normal) ->
 exit(#container{port = Port}, kill) ->
     liblxc:stop(Port).
 
-defined(Container, Options) ->
-    case liblxc:defined(Container) of
-        true ->
-            running(Container, Options);
-        false ->
-            create(Container, Options)
-    end.
+%%--------------------------------------------------------------------
+%%% Container state
+%%--------------------------------------------------------------------
 
-running(Container, Options) ->
-    case liblxc:running(Container) of
+% "STOPPED", "STARTING", "RUNNING", "STOPPING",
+% "ABORTING", "FREEZING", "FROZEN", "THAWED",
+state(#container{port = Port} = Container, Options) ->
+    state(Container, liblxc:state(Port), Options).
+
+state(Container, <<"RUNNING">>, _Options) ->
+    Console = console(Container),
+    Container#container{console = Console};
+state(#container{port = Port} = Container, <<"STOPPED">>, Options) ->
+    case liblxc:defined(Port) of
         true ->
-            Console = erlxc_console:start(liblxc:name(Container)),
-            #container{port = Container, console = Console};
+            ok;
         false ->
+            create(Container, Options),
             config(Container, Options)
-    end.
+    end,
+    start(Container, Options),
+    state(Container, Options);
+state(#container{port = Port} = Container, <<"STARTING">>, Options) ->
+    Timeout = proplists:get_value(timeout, Options, 120),
+    true = liblxc:wait(Port, <<"RUNNING">>, Timeout),
+    state(Container, Options);
+state(#container{port = Port} = Container, <<"STOPPING">>, Options) ->
+    Timeout = proplists:get_value(timeout, Options, 120),
+    true = liblxc:wait(Port, <<"STOPPED">>, Timeout),
+    state(Container, Options);
 
-create(Container, Options) ->
+state(_Container, Status, Options) ->
+    erlang:error({unsupported, Status, Options}).
+
+config(#container{port = Port}, Options) ->
+    Config = proplists:get_value(config, Options, []),
+
+    [ begin
+        case Item of
+            <<>> ->
+                true = liblxc:clear_config(Port);
+            {Key, Value} ->
+                true = liblxc:set_config_item(Port, Key, Value);
+            Key ->
+                true = liblxc:clear_config_item(Port, Key)
+        end
+      end || Item <- Config ].
+
+create(#container{port = Port}, Options) ->
     Create = proplists:get_value(create, Options, []),
+
     Template = proplists:get_value(template, Create, <<"ubuntu">>),
     Bdevtype = proplists:get_value(bdevtype, Create, <<>>),
     Bdevspec = proplists:get_value(bdevspec, Create, <<>>),
     Flags = proplists:get_value(flags, Create, 0),
     Argv = proplists:get_value(argv, Create, []),
 
-    true = liblxc:create(Container, Template, Bdevtype, Bdevspec, Flags, Argv),
-    config(Container, Options).
+    true = liblxc:create(Port, Template, Bdevtype, Bdevspec, Flags, Argv).
 
-config(Container, Options) ->
+start(#container{port = Port}, Options) ->
     Daemonize = proplists:get_value(daemonize, Options, false),
 
-    Config = proplists:get_value(config, Options, []),
+    Start = proplists:get_value(start, Options, []),
+    UseInit = proplists:get_value(useinit, Start, false),
+    Argv = proplists:get_value(argv, Start, []),
 
-    [ begin
-        case Item of
-            {Key, Value} ->
-                true = liblxc:set_config_item(Container, Key, Value);
-            <<>> ->
-                true = liblxc:clear_config(Container);
-            Key ->
-                true = liblxc:clear_config_item(Container, Key)
-        end
-      end || Item <- Config ],
+    true = liblxc:daemonize(Port, bool(Daemonize)),
+    true = liblxc:start(Port, bool(UseInit), Argv).
 
-    true = liblxc:daemonize(Container, bool(Daemonize)),
+console(#container{port = Port, console = undefined}) ->
+    Name = liblxc:name(Port),
+    erlxc_console:start(Name).
 
-    start(Container, Options).
-
-start(Container, Options) ->
-    UseInit = proplists:get_value(useinit, Options, false),
-    Path = proplists:get_value(path, Options, []),
-    Timeout = proplists:get_value(timeout, Options, 120),
-
-    true = liblxc:start(Container, bool(UseInit), Path),
-    true = liblxc:wait(Container, <<"RUNNING">>, Timeout),
-    Console = erlxc_console:start(liblxc:name(Container)),
-    #container{port = Container, console = Console}.
-
+%%--------------------------------------------------------------------
+%%% Internal functions
+%%--------------------------------------------------------------------
 bool(true) -> 1;
 bool(false) -> 0;
 bool(1) -> 1;
