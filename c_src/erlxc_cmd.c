@@ -88,7 +88,7 @@ erlxc_lxc_container_wait(erlxc_state_t *ep, ETERM *arg)
         goto BADARG;
 
     timeout = ERL_INT_VALUE(hd);
-    if (timeout < 0)
+    if (timeout < -1)
         goto BADARG;
 
     res = c->wait(c, state, timeout);
