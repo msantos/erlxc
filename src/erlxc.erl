@@ -95,7 +95,19 @@ state(#container{port = Port} = Container, <<"STOPPING">>, Options) ->
     true = liblxc:wait(Port, <<"STOPPED">>, Timeout),
     state(Container, Options);
 
-state(_Container, Status, Options) ->
+state(#container{port = Port} = Container, <<"FROZEN">>, Options) ->
+    true = liblxc:unfreeze(Port),
+    state(Container, Options);
+state(#container{port = Port} = Container, <<"FREEZING">>, Options) ->
+    Timeout = proplists:get_value(timeout, Options, 120),
+    true = liblxc:wait(Port, <<"FROZEN">>, Timeout),
+    state(Container, Options);
+state(#container{port = Port} = Container, <<"THAWED">>, Options) ->
+    Timeout = proplists:get_value(timeout, Options, 120),
+    true = liblxc:wait(Port, <<"RUNNING">>, Timeout),
+    state(Container, Options);
+
+state(#container{}, Status, Options) ->
     erlang:error({unsupported, Status, Options}).
 
 config(#container{port = Port}, Options) ->

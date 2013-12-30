@@ -223,6 +223,7 @@ specs() ->
 -spec daemonize(port(), 0 | 1) -> boolean().
 -spec defined(port()) -> boolean().
 -spec destroy(port()) -> boolean().
+-spec freeze(port()) -> boolean().
 -spec get_config_item(port(), iodata())  -> binary() | 'none'.
 -spec get_config_path(port()) -> binary().
 -spec get_keys(port(), iodata()) -> binary().
@@ -237,6 +238,7 @@ specs() ->
 -spec start(port(), 0 | 1, [binary()]) -> boolean().
 -spec state(port()) -> binary().
 -spec stop(port()) -> boolean().
+-spec unfreeze(port()) -> boolean().
 -spec wait(port(), iodata(), integer()) -> boolean().
 -spec test_argv(port(), [binary()]) -> true.
 -spec version(port()) -> binary().

@@ -57,6 +57,9 @@ runit(Container) ->
 
         save_config(Container),
 
+        freeze(Container),
+        unfreeze(Container),
+
         stop(Container),
 
         destroy(Container)
@@ -170,6 +173,16 @@ save_config(Container) ->
     {ok,_} = file:read_file_info(Cfg),
     file:delete(Cfg),
     ?_assertEqual(true, Reply).
+
+freeze(Container) ->
+    true = liblxc:freeze(Container),
+    Reply = liblxc:state(Container),
+    ?_assertEqual(<<"FROZEN">>, Reply).
+
+unfreeze(Container) ->
+    true = liblxc:unfreeze(Container),
+    Reply = liblxc:state(Container),
+    ?_assertEqual(<<"RUNNING">>, Reply).
 
 i2b(N) ->
     list_to_binary(integer_to_list(N)).

@@ -313,6 +313,18 @@ BADARG:
 }
 
     static ETERM *
+erlxc_lxc_container_freeze(erlxc_state_t *ep, ETERM *arg)
+{
+    return erlxc_bool(ep->c->freeze(ep->c));
+}
+
+    static ETERM *
+erlxc_lxc_container_unfreeze(erlxc_state_t *ep, ETERM *arg)
+{
+    return erlxc_bool(ep->c->unfreeze(ep->c));
+}
+
+    static ETERM *
 erlxc_lxc_container_init_pid(erlxc_state_t *ep, ETERM *arg)
 {
     return erl_mk_longlong(ep->c->init_pid(ep->c));
