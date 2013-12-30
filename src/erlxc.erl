@@ -36,7 +36,7 @@ spawn(Name) ->
 spawn(<<>>, Options) ->
     erlxc:spawn(name(<<"erlxc">>), Options);
 spawn(Name, Options) ->
-    Port = erlxc_drv:start(Name, [destroy, {daemonize,true}] ++ Options),
+    Port = erlxc_drv:start(Name, [{destroy,false}] ++ Options),
     state(#container{port = Port}, Options).
 
 spawn_link() ->
@@ -46,7 +46,7 @@ spawn_link(Name) ->
 spawn_link(<<>>, Options) ->
     erlxc:spawn_link(name(<<"erlxc">>), Options);
 spawn_link(Name, Options) ->
-    Port = erlxc_drv:start(Name, [destroy, {daemonize,false}] ++ Options),
+    Port = erlxc_drv:start(Name, [{destroy,true}] ++ Options),
     state(#container{port = Port}, Options).
 
 -spec send(container(),iodata()) -> 'true'.
@@ -136,13 +136,10 @@ create(#container{port = Port}, Options) ->
     true = liblxc:create(Port, Template, Bdevtype, Bdevspec, Flags, Argv).
 
 start(#container{port = Port}, Options) ->
-    Daemonize = proplists:get_value(daemonize, Options, false),
-
     Start = proplists:get_value(start, Options, []),
     UseInit = proplists:get_value(useinit, Start, false),
     Argv = proplists:get_value(argv, Start, []),
 
-    true = liblxc:daemonize(Port, bool(Daemonize)),
     true = liblxc:start(Port, bool(UseInit), Argv).
 
 %%--------------------------------------------------------------------

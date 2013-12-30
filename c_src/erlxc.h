@@ -67,8 +67,6 @@ ETERM *erlxc_bin(const char *);
 
 ETERM *erlxc_cmd(erlxc_state_t *, u_int32_t, ETERM *);
 
-void erlxc_lxc_container_put(erlxc_state_t *);
-
 #define VERBOSE(x, ...) do { \
     if (ep->verbose >= x) { \
         erl_err_msg(__VA_ARGS__); \

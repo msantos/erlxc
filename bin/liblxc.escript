@@ -220,7 +220,6 @@ specs() ->
 -spec clear_config_item(port(), iodata()) -> boolean().
 -spec config_file_name(port()) -> binary().
 -spec create(port(), iodata(), iodata(), iodata(), integer(), [binary()]) -> boolean().
--spec daemonize(port(), 0 | 1) -> boolean().
 -spec defined(port()) -> boolean().
 -spec destroy(port()) -> boolean().
 -spec freeze(port()) -> boolean().

@@ -167,16 +167,6 @@ NULL values are represented by the empty binary (<<>>).
                 [<<"-r">>, <<"precise">>]
             ).
 
-    daemonize(Container, Daemonize) -> true | false
-
-        Types   Container = pid()
-                Daemonize = 0 | 1
-
-        By default, the container is attached to the erlxc port. When
-        the Erlang side crashes or exits, the containers are shut down.
-        Setting the value of Daemonize to 1 results in the container
-        from detaching from the Erlang process.
-
     defined(Container) -> true | false
 
         Types   Container = pid()

@@ -109,28 +109,6 @@ BADARG:
 }
 
     static ETERM *
-erlxc_lxc_container_daemonize(erlxc_state_t *ep, ETERM *arg)
-{
-    ETERM *hd = NULL;
-    struct lxc_container *c = ep->c;
-    int state = 0;
-
-    /* state */
-    arg = erlxc_list_head(&hd, arg);
-    if (!hd || !ERL_IS_INTEGER(hd))
-        goto BADARG;
-
-    state = ERL_INT_VALUE(hd);
-    if (state != 0 && state != 1)
-        goto BADARG;
-
-    return erlxc_bool(c->want_daemonize(c, state));
-
-BADARG:
-    return erl_mk_atom("badarg");
-}
-
-    static ETERM *
 erlxc_lxc_container_defined(erlxc_state_t *ep, ETERM *arg)
 {
     return erlxc_bool(ep->c->is_defined(ep->c));
@@ -252,30 +230,11 @@ erlxc_lxc_container_start(erlxc_state_t *ep, ETERM *arg)
             goto BADARG;
     }
 
-    if (!lxc_container_get(c))
+    if (!c->want_daemonize(c, 1))
         goto BADARG;
 
-    switch (fork()) {
-        case -1:
-            res = false;
-            break;
-        case 0:
-            if (prctl(PR_SET_PDEATHSIG, SIGKILL) < 0)
-                erl_err_sys("signal");
+    res = c->start(c, useinit, argv);
 
-            res = c->start(c, useinit, argv);
-
-            erlxc_lxc_container_put(ep);
-
-            (void)erlxc_send(erlxc_tuple2(erl_mk_atom("start"),
-                        erlxc_bool(res)));
-            exit (0);
-        default:
-            res = true;
-            break;
-    }
-
-    erlxc_lxc_container_put(ep);
     erlxc_free_argv(argv);
     return erlxc_bool(res);
 
@@ -810,15 +769,6 @@ erlxc_free_argv(char **argv)
 
     for (i = 0; argv[i] != NULL; i++)
         erl_free(argv[i]);
-}
-
-    void
-erlxc_lxc_container_put(erlxc_state_t *ep)
-{
-    if (lxc_container_put(ep->c) == 1)
-        ep->c = NULL;
-
-    return;
 }
 
 /*
