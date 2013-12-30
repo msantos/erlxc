@@ -41,7 +41,10 @@ main(int argc, char *argv[])
     if (!ep)
         return -1;
 
-    while ( (ch = getopt(argc, argv, "e:hn:p:vxX")) != -1) {
+    ep->opt |= erlxc_opt_stop_on_exit;
+    ep->opt |= erlxc_opt_destroy_on_exit;
+
+    while ( (ch = getopt(argc, argv, "e:hn:p:t:v")) != -1) {
         switch (ch) {
             case 'e':
                 errlog = strdup(optarg);
@@ -58,14 +61,24 @@ main(int argc, char *argv[])
                 if (!path)
                     erl_err_sys("path");
                 break;
+            case 't':
+                if (strcmp("temporary", optarg) == 0) {
+                    ep->opt |= erlxc_opt_stop_on_exit;
+                    ep->opt |= erlxc_opt_destroy_on_exit;
+                }
+                else if (strcmp("transitory", optarg) == 0) {
+                    ep->opt |= erlxc_opt_stop_on_exit;
+                    ep->opt &= ~erlxc_opt_destroy_on_exit;
+                }
+                else if (strcmp("permanent", optarg) == 0) {
+                    ep->opt &= ~erlxc_opt_stop_on_exit;
+                    ep->opt &= ~erlxc_opt_destroy_on_exit;
+                }
+                else
+                    usage(ep);
+                break;
             case 'v':
                 ep->verbose++;
-                break;
-            case 'x':
-                ep->opt |= erlxc_opt_destroy_on_exit;
-                break;
-            case 'X':
-                ep->opt &= ~erlxc_opt_destroy_on_exit;
                 break;
             case 'h':
             default:
@@ -90,13 +103,17 @@ main(int argc, char *argv[])
 
     erlxc_loop(ep);
 
+    if (ep->opt & erlxc_opt_stop_on_exit) {
+        VERBOSE(1, "stopping container:%s", ep->c->name);
+        (void)ep->c->stop(ep->c);
+        (void)ep->c->wait(ep->c, "STOPPED", -1);
+    }
+
     if (ep->opt & erlxc_opt_destroy_on_exit) {
         VERBOSE(1, "destroying container:%s", ep->c->name);
-        (void)ep->c->stop(ep->c);
         (void)ep->c->destroy(ep->c);
     }
 
-    (void)lxc_container_put(ep->c);
     exit(0);
 }
 
@@ -246,8 +263,7 @@ usage(erlxc_state_t *ep)
             "    -e               error log\n"
             "    -p               LXC path\n"
             "    -v               verbose mode\n"
-            "    -x               destroy container on exit\n"
-            "    -X               do not destroy container on exit\n",
+            "    -t               container type (permanent, transient, temporary)\n",
             __progname
             );
 

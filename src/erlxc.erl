@@ -15,7 +15,9 @@
 
 -export([
         spawn/0, spawn/1, spawn/2,
-        spawn_link/0, spawn_link/1, spawn_link/2,
+
+        type/1,
+        temporary/1, transitory/1, permanent/1,
 
         send/2,
         exit/2,
@@ -34,19 +36,9 @@ spawn() ->
 spawn(Name) ->
     erlxc:spawn(Name, []).
 spawn(<<>>, Options) ->
-    erlxc:spawn(name(<<"erlxc">>), Options);
+    erlxc:spawn(name(<<"erlxc">>), Options ++ [temporary]);
 spawn(Name, Options) ->
-    Port = erlxc_drv:start(Name, [{destroy,false}] ++ Options),
-    state(#container{port = Port}, Options).
-
-spawn_link() ->
-    erlxc:spawn_link(<<>>, []).
-spawn_link(Name) ->
-    erlxc:spawn_link(Name, []).
-spawn_link(<<>>, Options) ->
-    erlxc:spawn_link(name(<<"erlxc">>), Options);
-spawn_link(Name, Options) ->
-    Port = erlxc_drv:start(Name, [{destroy,true}] ++ Options),
+    Port = erlxc_drv:start(Name, Options ++ [transitory]),
     state(#container{port = Port}, Options).
 
 -spec send(container(),iodata()) -> 'true'.
@@ -59,6 +51,18 @@ exit(#container{port = Port}, normal) ->
 
 exit(#container{port = Port}, kill) ->
     liblxc:stop(Port).
+
+type(#container{port = Port}) ->
+    liblxc:type(Port).
+
+temporary(#container{port = Port}) ->
+    liblxc:temporary(Port).
+
+transitory(#container{port = Port}) ->
+    liblxc:transitory(Port).
+
+permanent(#container{port = Port}) ->
+    liblxc:permanent(Port).
 
 container(#container{port = Port}) -> Port.
 console(#container{console = Port}) -> Port.

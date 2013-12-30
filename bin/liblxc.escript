@@ -230,6 +230,8 @@ specs() ->
 -spec init_pid(port()) -> integer().
 -spec load_config(port(), iodata()) -> boolean().
 -spec name(port()) -> binary().
+-spec opt(port()) -> integer().
+-spec permanent(port()) -> boolean().
 -spec running(port()) -> boolean().
 -spec save_config(port(), iodata()) -> boolean().
 -spec set_config_item(port(), iodata(), iodata()) -> boolean().
@@ -239,6 +241,9 @@ specs() ->
 -spec start(port(), 0 | 1, [binary()]) -> boolean().
 -spec state(port()) -> binary().
 -spec stop(port()) -> boolean().
+-spec temporary(port()) -> boolean().
+-spec transitory(port()) -> boolean().
+-spec type(port()) -> permanent | transitory | temporary.
 -spec unfreeze(port()) -> boolean().
 -spec wait(port(), iodata(), integer()) -> boolean().
 -spec test_argv(port(), [binary()]) -> true.

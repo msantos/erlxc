@@ -26,5 +26,10 @@ lxc_container_state/0
 lxc_container_stop/0
 lxc_container_unfreeze/0
 lxc_container_wait/2
+opt/0
+permanent/0
+temporary/0
+transitory/0
 test_argv/1
+type/0
 version/0

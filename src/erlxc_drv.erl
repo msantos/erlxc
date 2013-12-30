@@ -27,7 +27,7 @@ start(Name, Options) ->
     Cmd = getopts([{name, Name}] ++ Options),
     open_port({spawn, Cmd}, [{packet, 2}, binary]).
 
--spec call(port(),binary()) -> 'none' | boolean() | iodata() | integer().
+-spec call(port(),binary()) -> 'permanent' | 'transitory' | 'temporary' | 'none' | boolean() | iodata() | integer().
 call(Port, Data) when is_port(Port), is_binary(Data), byte_size(Data) < 16#ffff ->
     true = erlang:port_command(Port, Data),
     Reply = receive
@@ -63,15 +63,28 @@ getopts(Options) when is_list(Options) ->
     Exec = proplists:get_value(exec, Options, "sudo"),
     Progname = proplists:get_value(progname, Options, progname()),
 
-    Switches = [ optarg(Opt) || Opt <- proplists:compact(Options) ],
+    Expand = [ begin
+                case N of
+                    permanent -> {type, permanent};
+                    transitory -> {type, transitory};
+                    temporary -> {type, temporary};
+                    _ when is_atom(N) -> {N, true};
+                    _ when is_tuple(N) -> N
+                end
+        end || N <- Options ],
+
+    Opt = lists:ukeysort(1, Expand),
+
+    Switches = [ optarg(Arg) || Arg <- Opt ],
     Cmd = [ N || N <- [Exec, Progname|Switches], N /= ""],
 
     string:join(Cmd, " ").
 
 optarg({name, Arg})         -> switch("n", Arg);
 optarg({path, Arg})         -> switch("p", Arg);
-optarg(destroy)             -> "-x";
-optarg({destroy, false})    -> "-X";
+optarg({type, permanent})   -> switch("t", "permanent");
+optarg({type, transitory})  -> switch("t", "transitory");
+optarg({type, temporary})   -> switch("t", "temporary");
 optarg({errlog, Arg})       -> switch("e", Arg);
 optarg({verbose, Arg})      -> string:copies("-v ", Arg);
 optarg(_)                   -> "".

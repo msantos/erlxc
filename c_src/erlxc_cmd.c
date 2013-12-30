@@ -772,6 +772,50 @@ erlxc_free_argv(char **argv)
 }
 
 /*
+ * Set erlxc state
+ */
+    static ETERM *
+erlxc_opt(erlxc_state_t *ep, ETERM *arg)
+{
+    return erl_mk_int(ep->opt);
+}
+
+    static ETERM *
+erlxc_type(erlxc_state_t *ep, ETERM *arg)
+{
+    if (ep->opt & (erlxc_opt_stop_on_exit | erlxc_opt_destroy_on_exit))
+        return erl_mk_atom("temporary");
+    else if (ep->opt & erlxc_opt_stop_on_exit)
+        return erl_mk_atom("transitory");
+    else
+        return erl_mk_atom("permanent");
+}
+
+    static ETERM *
+erlxc_temporary(erlxc_state_t *ep, ETERM *arg)
+{
+    ep->opt |= erlxc_opt_stop_on_exit;
+    ep->opt |= erlxc_opt_destroy_on_exit;
+    return erlxc_bool(true);
+}
+
+    static ETERM *
+erlxc_transitory(erlxc_state_t *ep, ETERM *arg)
+{
+    ep->opt &= ~erlxc_opt_stop_on_exit;
+    ep->opt |= erlxc_opt_destroy_on_exit;
+    return erlxc_bool(true);
+}
+
+    static ETERM *
+erlxc_permanent(erlxc_state_t *ep, ETERM *arg)
+{
+    ep->opt &= ~erlxc_opt_stop_on_exit;
+    ep->opt &= ~erlxc_opt_destroy_on_exit;
+    return erlxc_bool(true);
+}
+
+/*
  * For tests only
  */
     static ETERM *
