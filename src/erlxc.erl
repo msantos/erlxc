@@ -15,8 +15,13 @@
 
 -export([
         spawn/0, spawn/1, spawn/2,
+        spawn_link/0, spawn_link/1, spawn_link/2,
+
         send/2,
-        exit/2
+        exit/2,
+
+        container/1,
+        console/1
     ]).
 
 -type container() :: #container{port::port(),console::port()}.
@@ -26,17 +31,22 @@
 -spec spawn(string() | binary(),list()) -> container().
 spawn() ->
     erlxc:spawn(<<>>, []).
-
 spawn(Name) ->
     erlxc:spawn(Name, []).
-
 spawn(<<>>, Options) ->
-    % XXX possible to re-use container names
-    N = binary:decode_unsigned(crypto:rand_bytes(4)),
-    Name = <<"erlxc", (i2b(N))/binary>>,
-    erlxc:spawn(Name, Options);
+    erlxc:spawn(name(<<"erlxc">>), Options);
 spawn(Name, Options) ->
-    Port = erlxc_drv:start(Name, [destroy] ++ Options),
+    Port = erlxc_drv:start(Name, [destroy, {daemonize,true}] ++ Options),
+    state(#container{port = Port}, Options).
+
+spawn_link() ->
+    erlxc:spawn_link(<<>>, []).
+spawn_link(Name) ->
+    erlxc:spawn_link(Name, []).
+spawn_link(<<>>, Options) ->
+    erlxc:spawn_link(name(<<"erlxc">>), Options);
+spawn_link(Name, Options) ->
+    Port = erlxc_drv:start(Name, [destroy, {daemonize,false}] ++ Options),
     state(#container{port = Port}, Options).
 
 -spec send(container(),iodata()) -> 'true'.
@@ -50,6 +60,9 @@ exit(#container{port = Port}, normal) ->
 exit(#container{port = Port}, kill) ->
     liblxc:stop(Port).
 
+container(#container{port = Port}) -> Port.
+console(#container{console = Port}) -> Port.
+
 %%--------------------------------------------------------------------
 %%% Container state
 %%--------------------------------------------------------------------
@@ -59,8 +72,9 @@ exit(#container{port = Port}, kill) ->
 state(#container{port = Port} = Container, Options) ->
     state(Container, liblxc:state(Port), Options).
 
-state(Container, <<"RUNNING">>, _Options) ->
-    Console = console(Container),
+state(#container{port = Port} = Container, <<"RUNNING">>, _Options) ->
+    Name = liblxc:name(Port),
+    Console = erlxc_console:start(Name),
     Container#container{console = Console};
 state(#container{port = Port} = Container, <<"STOPPED">>, Options) ->
     case liblxc:defined(Port) of
@@ -119,10 +133,6 @@ start(#container{port = Port}, Options) ->
     true = liblxc:daemonize(Port, bool(Daemonize)),
     true = liblxc:start(Port, bool(UseInit), Argv).
 
-console(#container{port = Port, console = undefined}) ->
-    Name = liblxc:name(Port),
-    erlxc_console:start(Name).
-
 %%--------------------------------------------------------------------
 %%% Internal functions
 %%--------------------------------------------------------------------
@@ -133,3 +143,8 @@ bool(0) -> 0.
 
 i2b(N) ->
     list_to_binary(integer_to_list(N)).
+
+name(Name) ->
+    % XXX possible to re-use container names
+    N = binary:decode_unsigned(crypto:rand_bytes(4)),
+    <<Name/binary, (i2b(N))/binary>>.
