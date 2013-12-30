@@ -32,6 +32,8 @@ liblxc_test_() ->
 
 runit(Container) ->
     [
+        version(Container),
+
         create(Container),
 
         defined(Container),
@@ -68,6 +70,10 @@ startit() ->
 
 stopit(Container) ->
     erlxc_drv:stop(Container).
+
+version(Container) ->
+    Reply = is_binary(liblxc:version(Container)),
+    ?_assertEqual(true, Reply).
 
 create(Container) ->
     Bridge = getenv("ERLXC_TEST_BRIDGE", <<"lxcbr0">>),

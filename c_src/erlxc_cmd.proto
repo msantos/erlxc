@@ -24,3 +24,4 @@ lxc_container_state/0
 lxc_container_stop/0
 lxc_container_wait/2
 test_argv/1
+version/0

@@ -235,7 +235,8 @@ erlxc_read(void *buf, ssize_t len)
     static void
 usage(erlxc_state_t *ep)
 {
-    (void)fprintf(stderr, "%s %s\n", __progname, ERLXC_VERSION);
+    (void)fprintf(stderr, "%s %s (lxc %s)\n",
+            __progname, ERLXC_VERSION, lxc_get_version());
     (void)fprintf(stderr,
             "usage: %s -n <name> <options>\n"
             "    -n               container name\n"

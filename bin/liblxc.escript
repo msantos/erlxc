@@ -239,4 +239,5 @@ specs() ->
 -spec stop(port()) -> boolean().
 -spec wait(port(), iodata(), integer()) -> boolean().
 -spec test_argv(port(), [binary()]) -> true.
+-spec version(port()) -> binary().
 ".

@@ -51,6 +51,12 @@ erlxc_cmd(erlxc_state_t *ep, u_int32_t cmd, ETERM *arg)
 }
 
     static ETERM *
+erlxc_version(erlxc_state_t *ep, ETERM *arg)
+{
+    return erlxc_bin(lxc_get_version());
+}
+
+    static ETERM *
 erlxc_lxc_container_name(erlxc_state_t *ep, ETERM *arg)
 {
     return erlxc_bin(ep->c->name);
