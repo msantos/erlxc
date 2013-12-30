@@ -127,6 +127,8 @@ erlxc_loop(erlxc_state_t *ep)
         if (erlxc_write(ERLXC_MSG_SYNC, reply) < 0)
             erl_err_sys("erlxc_write");
 
+        erl_free_compound(reply);
+
         /* Check for defunct processes */
         while (waitpid(-1, 0, WNOHANG) > 0);
 
