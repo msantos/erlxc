@@ -604,6 +604,100 @@ BADARG:
 }
 
     static ETERM *
+erlxc_lxc_container_get_cgroup_item(erlxc_state_t *ep, ETERM *arg)
+{
+    ETERM *hd = NULL;
+    struct lxc_container *c = ep->c;
+    char *key = NULL;
+    char *buf = NULL;
+    int n = 0;
+    ETERM *t = NULL;
+
+    /* key */
+    arg = erlxc_list_head(&hd, arg);
+    if (!hd || !ERLXC_IS_IOLIST(hd))
+        goto BADARG;
+
+    if (erl_iolist_length(hd) > 0)
+        key = erl_iolist_to_string(hd);
+
+    if (!key)
+        goto BADARG;
+
+    n = c->get_cgroup_item(c, key, NULL, 0);
+
+    /* 0 is ??? */
+    if (n < 1) {
+        erl_free(key);
+        return erl_mk_atom("none");
+    }
+
+    /* account for null */
+    buf = erlxc_malloc(n+1);
+
+    (void)c->get_cgroup_item(c, key, buf, n+1);
+
+    /* null is not included in binary */
+    t = erl_mk_binary(buf, n);
+
+    erl_free(key);
+    erl_free(buf);
+
+    return t;
+
+BADARG:
+    erl_free(key);
+    erl_free(buf);
+
+    return erl_mk_atom("badarg");
+}
+
+    static ETERM *
+erlxc_lxc_container_set_cgroup_item(erlxc_state_t *ep, ETERM *arg)
+{
+    ETERM *hd = NULL;
+    struct lxc_container *c = ep->c;
+    char *key = NULL;
+    char *val = NULL;
+    bool res;
+
+    /* key */
+    arg = erlxc_list_head(&hd, arg);
+    if (!hd || !ERLXC_IS_IOLIST(hd))
+        goto BADARG;
+
+    if (erl_iolist_length(hd) > 0)
+        key = erl_iolist_to_string(hd);
+
+    if (!key)
+        goto BADARG;
+
+    /* value */
+    arg = erlxc_list_head(&hd, arg);
+    if (!hd || !ERLXC_IS_IOLIST(hd))
+        goto BADARG;
+
+    if (erl_iolist_length(hd) > 0) {
+        val = erl_iolist_to_string(hd);
+        if (!val)
+            goto BADARG;
+    }
+
+    res = c->set_cgroup_item(c, key, val);
+
+    erl_free(key);
+    erl_free(val);
+
+    return erlxc_bool(res);
+
+BADARG:
+    erl_free(key);
+    erl_free(val);
+
+    return erl_mk_atom("badarg");
+}
+
+    static ETERM *
 erlxc_list_active_containers(erlxc_state_t *ep, ETERM *arg)
 {
     return erlxc_list_containers(ep, arg, list_active_containers);

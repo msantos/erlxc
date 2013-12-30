@@ -225,6 +225,7 @@ specs() ->
 -spec destroy(port()) -> boolean().
 -spec freeze(port()) -> boolean().
 -spec get_config_item(port(), iodata())  -> binary() | 'none'.
+-spec get_cgroup_item(port(), iodata())  -> binary() | 'none'.
 -spec get_config_path(port()) -> binary().
 -spec get_keys(port(), iodata()) -> binary().
 -spec init_pid(port()) -> integer().
@@ -233,6 +234,7 @@ specs() ->
 -spec running(port()) -> boolean().
 -spec save_config(port(), iodata()) -> boolean().
 -spec set_config_item(port(), iodata(), iodata()) -> boolean().
+-spec set_cgroup_item(port(), iodata(), iodata()) -> boolean().
 -spec set_config_path(port(), iodata()) -> boolean().
 -spec shutdown(port(), non_neg_integer()) -> boolean().
 -spec start(port(), 0 | 1, [binary()]) -> boolean().

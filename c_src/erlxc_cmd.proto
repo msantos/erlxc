@@ -9,6 +9,7 @@ lxc_container_daemonize/1
 lxc_container_defined/0
 lxc_container_destroy/0
 lxc_container_freeze/0
+lxc_container_get_cgroup_item/1
 lxc_container_get_config_item/1
 lxc_container_get_config_path/0
 lxc_container_get_keys/1
@@ -17,6 +18,7 @@ lxc_container_load_config/1
 lxc_container_name/0
 lxc_container_running/0
 lxc_container_save_config/1
+lxc_container_set_cgroup_item/2
 lxc_container_set_config_item/2
 lxc_container_set_config_path/1
 lxc_container_shutdown/1

@@ -55,6 +55,9 @@ runit(Container) ->
         get_config_path(Container),
         set_config_path(Container),
 
+        set_cgroup_item(Container),
+        get_cgroup_item(Container),
+
         save_config(Container),
 
         freeze(Container),
@@ -165,6 +168,14 @@ set_config_path(Container) ->
     Path = liblxc:get_config_path(Container),
     Reply = liblxc:set_config_path(Container, Path),
     ?_assertEqual(true, Reply).
+
+set_cgroup_item(Container) ->
+    Reply = liblxc:set_cgroup_item(Container, "cpu.shares", <<"10">>),
+    ?_assertEqual(true, Reply).
+
+get_cgroup_item(Container) ->
+    Reply = liblxc:get_cgroup_item(Container, "cpu.shares"),
+    ?_assertEqual(<<"10\n">>, Reply).
 
 save_config(Container) ->
     Name = liblxc:name(Container),
