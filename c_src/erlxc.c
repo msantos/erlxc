@@ -41,7 +41,7 @@ main(int argc, char *argv[])
     if (!ep)
         return -1;
 
-    while ( (ch = getopt(argc, argv, "e:n:p:vxX")) != -1) {
+    while ( (ch = getopt(argc, argv, "e:hn:p:vxX")) != -1) {
         switch (ch) {
             case 'e':
                 errlog = strdup(optarg);
@@ -67,6 +67,7 @@ main(int argc, char *argv[])
             case 'X':
                 ep->opt &= ~erlxc_opt_destroy_on_exit;
                 break;
+            case 'h':
             default:
                 usage(ep);
         }
