@@ -73,7 +73,8 @@ erlxc_malloc(ssize_t size)
     void *buf = NULL;
 
     if (size < 0 || size >= INT32_MAX)
-        erl_err_quit("malloc:invalid size:%ld", size);
+        erl_err_quit("malloc:invalid size:%ld",
+                (unsigned long)size);
 
     buf = erl_malloc(size);
 

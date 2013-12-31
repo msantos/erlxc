@@ -168,7 +168,9 @@ erlxc_msg(erlxc_state_t *ep)
         if (errno == 0)
             return NULL;
 
-        erl_err_sys("erlxc_msg: expected=%lu, got=%lu", sizeof(buf), n);
+        erl_err_sys("erlxc_msg: expected=%lu, got=%lu",
+                (unsigned long)sizeof(buf),
+                (unsigned long)n);
     }
     
     len = ntohs(buf);
@@ -185,13 +187,16 @@ erlxc_msg(erlxc_state_t *ep)
 
     n = erlxc_read(&buf, sizeof(buf));
     if (n != sizeof(buf))
-        erl_err_sys("erlxc_msg: expected=%lu, got=%lu", sizeof(buf), n);
+        erl_err_sys("erlxc_msg: expected=%lu, got=%lu",
+                (unsigned long)sizeof(buf),
+                (unsigned long)n);
 
     msg->cmd = ntohs(buf);
 
     n = erlxc_read(msg->arg, len);
     if (n != len)
-        erl_err_sys("erlxc_msg: expected=%u, got=%lu", len, n);
+        erl_err_sys("erlxc_msg: expected=%u, got=%lu",
+                len, (unsigned long)n);
     
     return msg;
 }
