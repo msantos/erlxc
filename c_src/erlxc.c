@@ -42,7 +42,6 @@ main(int argc, char *argv[])
         return -1;
 
     ep->opt |= erlxc_opt_stop_on_exit;
-    ep->opt |= erlxc_opt_destroy_on_exit;
 
     while ( (ch = getopt(argc, argv, "e:hn:p:t:v")) != -1) {
         switch (ch) {
