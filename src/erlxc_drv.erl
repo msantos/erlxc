@@ -69,7 +69,7 @@ getopts(Options) when is_list(Options) ->
                     transitory -> {type, transitory};
                     temporary -> {type, temporary};
                     _ when is_atom(N) -> {N, true};
-                    _ when is_tuple(N) -> N
+                    {_,_} -> N
                 end
         end || N <- Options ],
 
