@@ -66,4 +66,4 @@ quote(Str) ->
     "\"" ++ Str ++ "\"".
 
 progname() ->
-    "lxc-console".
+    os:find_executable("lxc-console").
