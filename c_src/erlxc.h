@@ -45,6 +45,7 @@ enum {
 typedef struct {
     u_int32_t opt;
     u_int8_t verbose;
+    int statefd;
     struct lxc_container *c;
 } erlxc_state_t;
 

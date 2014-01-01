@@ -16,7 +16,7 @@
 
 %% API
 -export([start/1, start/2, stop/1]).
--export([call/2, encode/2, event/1]).
+-export([call/2, encode/2, event/1, event/2]).
 -export([getopts/1]).
 
 -spec start(nonempty_string() | binary()) -> port().
@@ -39,13 +39,16 @@ call(Port, Data) when is_port(Port), is_binary(Data), byte_size(Data) < 16#ffff 
         _ -> Reply
     end.
 
--spec event(port()) -> {start, boolean()}.
+-spec event(port()) -> {state, binary()}.
+-spec event(port(), non_neg_integer() | 'infinity') -> {state, binary()}.
 event(Port) when is_port(Port) ->
+    event(Port, 0).
+event(Port, Timeout) when is_port(Port) ->
     receive
         {Port, {data, <<?ERLXC_MSG_ASYNC, Msg/binary>>}} ->
             binary_to_term(Msg)
     after
-        0 ->
+        Timeout ->
             false
     end.
 

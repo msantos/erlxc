@@ -44,6 +44,7 @@ main(int argc, char *argv[])
         return -1;
 
     ep->opt |= erlxc_opt_stop_on_exit;
+    ep->statefd = -1;
 
     while ( (ch = getopt(argc, argv, "e:hn:p:t:v")) != -1) {
         switch (ch) {
@@ -149,6 +150,13 @@ erlxc_loop(erlxc_state_t *ep)
 
         if (ep->verbose > 1)
             erlxc_stats(ep);
+
+        if (ep->statefd > -1) {
+            if (write(ep->statefd, "x", 1) < 0) {
+                (void)close(ep->statefd);
+                ep->statefd = -1;
+            }
+        }
 
         (void)fflush(stderr);
     }

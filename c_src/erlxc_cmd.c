@@ -772,6 +772,125 @@ erlxc_free_argv(char **argv)
 }
 
 /*
+ * Async
+ */
+    static ETERM *
+erlxc_async_state_notify(erlxc_state_t *ep, ETERM *arg)
+{
+    ETERM *hd = NULL;
+    const char *state = NULL;
+    int timeout = 0;
+    int fd[2] = {0};
+    pid_t pid = -1;
+
+    const char *new_state = NULL;
+    ETERM *t = NULL;
+
+    if (ep->statefd > -1)
+        return erl_mk_atom("false");
+
+    /* timeout */
+    arg = erlxc_list_head(&hd, arg);
+    if (!hd || !ERL_IS_INTEGER(hd))
+        goto BADARG;
+
+    timeout = ERL_INT_VALUE(hd);
+    if (timeout < 1)
+        goto BADARG;
+
+    if (socketpair(AF_UNIX, SOCK_STREAM, 0, fd) < 0)
+        erl_err_sys("socketpair");
+
+    pid = fork();
+
+    switch (pid) {
+        case -1:
+            erl_err_sys("fork");
+        case 0:
+            if (close(fd[1]) < 0)
+                erl_err_sys("close");
+            break;
+        default:
+            if (close(fd[0]) < 0)
+                erl_err_sys("close");
+
+            ep->statefd = fd[1];
+
+            if (waitpid(pid, NULL, 0) < 0)
+                erl_err_sys("waitpid");
+
+            return erl_mk_atom("true");
+    }
+
+    switch (fork()) {
+        case -1:
+            erl_err_sys("fork");
+        case 0:
+            break;
+        default:
+            exit (0);
+    }
+
+    for ( ; ; ) {
+        fd_set rfds;
+        struct timeval tv = {0};
+        char buf = 0;
+
+        FD_ZERO(&rfds);
+        FD_SET(fd[0], &rfds);
+
+        tv.tv_sec = timeout;
+
+        switch (select(fd[0]+1, &rfds, NULL, NULL, &tv)) {
+            case -1:
+                if (errno != EINTR)
+                    erl_err_sys("select");
+                break;
+            case 0:
+                break;
+            default:
+                if (read(fd[0], &buf, 1) != 1)
+                    exit (0);
+                break;
+        }
+
+        new_state = ep->c->state(ep->c);
+
+        if (state && !strcmp(state, new_state))
+            continue;
+
+        state = new_state;
+
+        t = erlxc_tuple2(
+                erl_mk_atom("state"),
+                erlxc_bin(state)
+                );
+
+        if (erlxc_send(t) < 0)
+            erl_err_sys("send");
+
+        erl_free_compound(t);
+    }
+
+BADARG:
+    return erl_mk_atom("badarg");
+}
+
+    static ETERM *
+erlxc_async_state_close(erlxc_state_t *ep, ETERM *arg)
+{
+    if (ep->statefd < 0)
+        return erl_mk_atom("false");
+
+    if (close(ep->statefd) < 0)
+        return erl_mk_atom("false");
+
+    ep->statefd = -1;
+
+    return erl_mk_atom("true");
+}
+
+/*
  * Set erlxc state
  */
     static ETERM *
