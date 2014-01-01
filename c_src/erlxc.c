@@ -24,6 +24,8 @@ static void usage(erlxc_state_t *);
 static int erlxc_write(u_int16_t, ETERM *);
 static ssize_t erlxc_read(void *, ssize_t);
 
+static void erlxc_stats(erlxc_state_t *ep);
+
 extern char *__progname;
 
     int
@@ -148,6 +150,9 @@ erlxc_loop(erlxc_state_t *ep)
         /* Check for defunct processes */
         while (waitpid(-1, 0, WNOHANG) > 0);
 
+        if (ep->verbose > 1)
+            erlxc_stats(ep);
+
         (void)fflush(stderr);
     }
 }
@@ -254,6 +259,17 @@ erlxc_read(void *buf, ssize_t len)
     } while (got < len);
 
     return len;
+}
+
+    static void
+erlxc_stats(erlxc_state_t *ep)
+{
+    unsigned long allocated = 0;
+    unsigned long freed = 0;
+
+    erl_eterm_statistics(&allocated, &freed);
+    VERBOSE(2, "allocated=%ld, freed=%ld", allocated, freed);
+    erl_eterm_release();
 }
 
     static void
