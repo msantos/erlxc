@@ -147,9 +147,6 @@ erlxc_loop(erlxc_state_t *ep)
 
         erl_free_compound(reply);
 
-        /* Check for defunct processes */
-        while (waitpid(-1, 0, WNOHANG) > 0);
-
         if (ep->verbose > 1)
             erlxc_stats(ep);
 
