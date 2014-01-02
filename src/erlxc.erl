@@ -39,7 +39,7 @@ spawn(<<>>, Options) ->
     erlxc:spawn(name(<<"erlxc">>), Options ++ [temporary]);
 spawn(Name, Options) ->
     Port = erlxc_drv:start(Name, Options ++ [transitory]),
-    state(#container{port = Port}, Options).
+    boot(#container{port = Port}, Options).
 
 -spec send(container(),iodata()) -> 'true'.
 send(#container{console = Console}, Data) ->
@@ -73,46 +73,41 @@ console(#container{console = Port}) -> Port.
 
 % "STOPPED", "STARTING", "RUNNING", "STOPPING",
 % "ABORTING", "FREEZING", "FROZEN", "THAWED",
+boot(#container{port = Port} = Container, Options) ->
+    true = liblxc:async_state_notify(Port, 5),
+    state(Container, Options).
+
 state(#container{port = Port} = Container, Options) ->
-    state(Container, liblxc:state(Port), Options).
-
-state(#container{port = Port} = Container, <<"RUNNING">>, _Options) ->
-    Name = liblxc:name(Port),
-    Console = erlxc_console:start(Name),
-    Container#container{console = Console};
-state(#container{port = Port} = Container, <<"STOPPED">>, Options) ->
-    case liblxc:defined(Port) of
-        true ->
-            ok;
-        false ->
+    state(Container, liblxc:defined(Port), Options).
+state(#container{port = Port} = Container, false, Options) ->
+    case erlxc_drv:event(Port, infinity) of
+        {state, <<"STOPPED">>} ->
             create(Container, Options),
-            config(Container, Options)
-    end,
-    start(Container, Options),
-    state(Container, Options);
-state(#container{port = Port} = Container, <<"STARTING">>, Options) ->
-    Timeout = proplists:get_value(timeout, Options, 120),
-    true = liblxc:wait(Port, <<"RUNNING">>, Timeout),
-    state(Container, Options);
-state(#container{port = Port} = Container, <<"STOPPING">>, Options) ->
-    Timeout = proplists:get_value(timeout, Options, 120),
-    true = liblxc:wait(Port, <<"STOPPED">>, Timeout),
-    state(Container, Options);
-
-state(#container{port = Port} = Container, <<"FROZEN">>, Options) ->
-    true = liblxc:unfreeze(Port),
-    state(Container, Options);
-state(#container{port = Port} = Container, <<"FREEZING">>, Options) ->
-    Timeout = proplists:get_value(timeout, Options, 120),
-    true = liblxc:wait(Port, <<"FROZEN">>, Timeout),
-    state(Container, Options);
-state(#container{port = Port} = Container, <<"THAWED">>, Options) ->
-    Timeout = proplists:get_value(timeout, Options, 120),
-    true = liblxc:wait(Port, <<"RUNNING">>, Timeout),
-    state(Container, Options);
-
-state(#container{}, Status, Options) ->
-    erlang:error({unsupported, Status, Options}).
+            config(Container, Options),
+            start(Container, Options),
+            state(Container, Options);
+        {state, State} ->
+            erlang:error({error, State})
+    end;
+state(#container{port = Port} = Container, true, Options) ->
+    case erlxc_drv:event(Port, infinity) of
+        {state, <<"RUNNING">>} ->
+            true = liblxc:async_state_close(Port),
+            Name = liblxc:name(Port),
+            Console = erlxc_console:start(Name),
+            Container#container{console = Console};
+        {state, <<"STOPPED">>} ->
+            start(Container, Options),
+            state(Container, Options);
+        {state, <<"FROZEN">>} ->
+            true = liblxc:unfreeze(Port),
+            state(Container, true, Options);
+        {state, State} when State =:= <<"STARTING">>; State =:= <<"STOPPING">>;
+                State =:= <<"FREEZING">>; State =:= <<"THAWED">> ->
+            state(Container, Options);
+        {state, State} ->
+            erlang:error({unsupported, State, Options})
+    end.
 
 config(#container{port = Port}, Options) ->
     Config = proplists:get_value(config, Options, []),
