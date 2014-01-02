@@ -39,9 +39,6 @@ erlxc_cmd(erlxc_state_t *ep, u_int32_t cmd, ETERM *arg)
     if (cmd >= sizeof(cmds)/sizeof(cmds[0]))
         return erl_mk_atom("badarg");
 
-    if (!ep->c)
-        return erl_mk_atom("badarg");
-
     fun = &cmds[cmd];
 
     if (!ERL_IS_LIST(arg) || erl_length(arg) != fun->narg)
