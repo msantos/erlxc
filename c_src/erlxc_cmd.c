@@ -779,6 +779,7 @@ erlxc_async_state_notify(erlxc_state_t *ep, ETERM *arg)
     int timeout = 0;
     int fd[2] = {0};
     pid_t pid = -1;
+    int fdin = -1;
 
     const char *new_state = NULL;
     ETERM *t = NULL;
@@ -827,6 +828,16 @@ erlxc_async_state_notify(erlxc_state_t *ep, ETERM *arg)
         default:
             exit (0);
     }
+
+    fdin = open("/dev/null", O_RDWR);
+    if (fdin < 0)
+        erl_err_sys("open");
+
+    if (dup2(fdin, STDIN_FILENO) < 0)
+        erl_err_sys("dup2");
+
+    if (close(fdin) < 0)
+        erl_err_sys("close");
 
     for ( ; ; ) {
         fd_set rfds;
