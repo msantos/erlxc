@@ -846,7 +846,7 @@ erlxc_async_state_notify(erlxc_state_t *ep, ETERM *arg)
             case 0:
                 break;
             default:
-                if (read(fd[0], &buf, 1) != 1)
+                if (read(fd[0], &buf, 1) != 1 || buf == 'q')
                     exit (0);
                 break;
         }
@@ -878,6 +878,8 @@ erlxc_async_state_close(erlxc_state_t *ep, ETERM *arg)
 {
     if (ep->statefd < 0)
         return erl_mk_atom("false");
+
+    (void)write(ep->statefd, "q", 1);
 
     if (close(ep->statefd) < 0)
         return erl_mk_atom("false");
