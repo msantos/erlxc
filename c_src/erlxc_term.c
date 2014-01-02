@@ -79,7 +79,7 @@ erlxc_malloc(ssize_t size)
     buf = erl_malloc(size);
 
     if (!buf)
-        erl_err_quit("malloc");
+        erl_err_sys("malloc");
 
     return buf;
 }
