@@ -1032,21 +1032,26 @@ erlxc_test_argv(erlxc_state_t *ep, ETERM *arg)
     char **argv = NULL;
     int len = 0;
     int i = 0;
+    ETERM *t = NULL;
 
     arg = erlxc_list_head(&hd, arg);
     if (!hd)
         return erl_mk_atom("badarg");
 
     len = erl_length(hd);
-    VERBOSE(0, "len=%d", len);
+    VERBOSE(3, "len=%d", len);
 
     argv = erlxc_list_to_argv(hd);
 
     if (!argv)
         return erl_mk_atom("badarg");
 
-    for (i = 0; i < len; i++)
-        (void)fprintf(stderr, "arg[%d]=%s", i, argv[i]);
+    t = erl_mk_empty_list();
+    for (i = 0; i < len; i++) {
+        VERBOSE(3, "arg[%d]=%s", i, argv[i]);
+        t = erl_cons(erl_mk_binary(argv[i], strlen(argv[i])), t);
+    }
 
-    return erlxc_bool(true);
+    erlxc_free_argv(argv);
+    return t;
 }

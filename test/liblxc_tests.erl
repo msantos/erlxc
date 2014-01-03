@@ -17,11 +17,8 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
-% lxc_container_clear_config/1
-% lxc_container_set_config_item/3
 % lxc_container_load_config/2
 % lxc_container_init_pid/1
-% argv/1
 
 liblxc_test_() ->
     {setup,
@@ -33,6 +30,7 @@ liblxc_test_() ->
 runit(Container) ->
     [
         version(Container),
+        argv(Container),
 
         create(Container),
 
@@ -83,6 +81,11 @@ stopit(Container) ->
 version(Container) ->
     Reply = is_binary(liblxc:version(Container)),
     ?_assertEqual(true, Reply).
+
+argv(Container) ->
+    Arg0 = [ integer_to_binary(N) || N <- lists:seq(1,200) ],
+    Arg1 = lists:reverse(liblxc:test_argv(Container, Arg0)),
+    ?_assertEqual(Arg0, Arg1).
 
 create(Container) ->
     Bridge = getenv("ERLXC_TEST_BRIDGE", <<"lxcbr0">>),
