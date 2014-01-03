@@ -229,6 +229,7 @@ specs() ->
 -spec get_cgroup_item(port(), iodata())  -> binary() | 'none'.
 -spec get_config_path(port()) -> binary().
 -spec get_interfaces(port()) -> [binary()].
+-spec get_ips(port(), iodata(), iodata(), integer()) -> [binary()].
 -spec get_keys(port(), iodata()) -> binary().
 -spec init_pid(port()) -> integer().
 -spec load_config(port(), iodata()) -> boolean().

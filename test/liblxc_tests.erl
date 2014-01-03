@@ -56,6 +56,7 @@ runit(Container) ->
         set_config_path(Container),
 
         get_interfaces(Container),
+        get_ips(Container),
 
         set_cgroup_item(Container),
         get_cgroup_item(Container),
@@ -182,6 +183,10 @@ get_cgroup_item(Container) ->
 get_interfaces(Container) ->
     Reply = liblxc:get_interfaces(Container),
     ?_assertEqual(true, lists:member(<<"lo">>, Reply)).
+
+get_ips(Container) ->
+    Reply = liblxc:get_ips(Container, <<"lo">>, <<>>, 0),
+    ?_assertEqual([<<"::1">>,<<"127.0.0.1">>], Reply).
 
 save_config(Container) ->
     Name = liblxc:name(Container),

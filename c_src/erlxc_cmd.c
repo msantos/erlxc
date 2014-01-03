@@ -683,6 +683,59 @@ erlxc_lxc_container_get_interfaces(erlxc_state_t *ep, ETERM *arg)
 }
 
     static ETERM *
+erlxc_lxc_container_get_ips(erlxc_state_t *ep, ETERM *arg)
+{
+    ETERM *hd = NULL;
+    char **ips = NULL;
+    const char *interface = NULL;
+    const char *family = NULL;
+    int scope = 0;
+    ETERM *t = NULL;
+    int i = 0;
+
+    /* interface */
+    arg = erlxc_list_head(&hd, arg);
+    if (!hd || !ERLXC_IS_IOLIST(hd))
+        goto BADARG;
+
+    if (erl_iolist_length(hd) > 0)
+        interface = erl_iolist_to_string(hd);
+
+    /* family */
+    arg = erlxc_list_head(&hd, arg);
+    if (!hd || !ERLXC_IS_IOLIST(hd))
+        goto BADARG;
+
+    if (erl_iolist_length(hd) > 0)
+        family = erl_iolist_to_string(hd);
+
+    /* scope */
+    arg = erlxc_list_head(&hd, arg);
+    if (!hd || !ERL_IS_INTEGER(hd))
+        goto BADARG;
+
+    scope = ERL_INT_VALUE(hd);
+
+    t = erl_mk_empty_list();
+
+    ips = ep->c->get_ips(ep->c, interface, family, scope);
+
+    if (!ips)
+        return t;
+
+    for (i = 0; ips[i]; i++) {
+        t = erl_cons(erl_mk_binary(ips[i], strlen(ips[i])), t);
+        free(ips[i]);
+    }
+
+    free(ips);
+    return t;
+
+BADARG:
+    return erl_mk_atom("badarg");
+}
+
+    static ETERM *
 erlxc_list_active_containers(erlxc_state_t *ep, ETERM *arg)
 {
     return erlxc_list_containers(ep, arg, list_active_containers);
