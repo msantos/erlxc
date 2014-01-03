@@ -1,7 +1,7 @@
 #!/bin/sh
 
 cat<< EOF
-/* Copyright (c) $(date +%Y), Michael Santos <michael.santos@gmail.com>
+/* Copyright (c) 2013-$(date +%Y), Michael Santos <michael.santos@gmail.com>
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
