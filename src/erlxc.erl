@@ -97,6 +97,7 @@ state(#container{port = Port} = Container, true, Options) ->
             Console = erlxc_console:start(Name),
             Container#container{console = Console};
         {state, <<"STOPPED">>} ->
+            config(Container, Options),
             start(Container, Options),
             state(Container, Options);
         {state, <<"FROZEN">>} ->
