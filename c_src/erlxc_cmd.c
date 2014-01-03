@@ -403,7 +403,7 @@ erlxc_lxc_container_config_file_name(erlxc_state_t *ep, ETERM *arg)
 erlxc_lxc_container_clear_config(erlxc_state_t *ep, ETERM *arg)
 {
     ep->c->clear_config(ep->c);
-    return erl_mk_atom("true");
+    return erlxc_bool(true);
 }
 
     static ETERM *
@@ -867,7 +867,7 @@ erlxc_async_state_notify(erlxc_state_t *ep, ETERM *arg)
     ETERM *t = NULL;
 
     if (ep->statefd > -1)
-        return erl_mk_atom("false");
+        return erlxc_bool(false);
 
     /* timeout */
     arg = erlxc_list_head(&hd, arg);
@@ -899,7 +899,7 @@ erlxc_async_state_notify(erlxc_state_t *ep, ETERM *arg)
             if (waitpid(pid, NULL, 0) < 0)
                 erl_err_sys("waitpid");
 
-            return erl_mk_atom("true");
+            return erlxc_bool(true);
     }
 
     switch (fork()) {
@@ -970,16 +970,16 @@ BADARG:
 erlxc_async_state_close(erlxc_state_t *ep, ETERM *arg)
 {
     if (ep->statefd < 0)
-        return erl_mk_atom("false");
+        return erlxc_bool(false);
 
     (void)write(ep->statefd, "q", 1);
 
     if (close(ep->statefd) < 0)
-        return erl_mk_atom("false");
+        return erlxc_bool(false);
 
     ep->statefd = -1;
 
-    return erl_mk_atom("true");
+    return erlxc_bool(true);
 }
 
 /*
@@ -991,10 +991,11 @@ erlxc_type(erlxc_state_t *ep, ETERM *arg)
     if ( (ep->opt & erlxc_opt_stop_on_exit) &&
             (ep->opt & erlxc_opt_destroy_on_exit))
         return erl_mk_atom("temporary");
-    else if (ep->opt & erlxc_opt_stop_on_exit)
+
+    if (ep->opt & erlxc_opt_stop_on_exit)
         return erl_mk_atom("transitory");
-    else
-        return erl_mk_atom("permanent");
+
+    return erl_mk_atom("permanent");
 }
 
     static ETERM *
