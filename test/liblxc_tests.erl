@@ -55,6 +55,8 @@ runit(Container) ->
         get_config_path(Container),
         set_config_path(Container),
 
+        get_interfaces(Container),
+
         set_cgroup_item(Container),
         get_cgroup_item(Container),
 
@@ -176,6 +178,10 @@ set_cgroup_item(Container) ->
 get_cgroup_item(Container) ->
     Reply = liblxc:get_cgroup_item(Container, "cpu.shares"),
     ?_assertEqual(<<"10\n">>, Reply).
+
+get_interfaces(Container) ->
+    Reply = liblxc:get_interfaces(Container),
+    ?_assertEqual(true, lists:member(<<"lo">>, Reply)).
 
 save_config(Container) ->
     Name = liblxc:name(Container),

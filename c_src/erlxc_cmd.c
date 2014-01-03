@@ -660,6 +660,29 @@ BADARG:
 }
 
     static ETERM *
+erlxc_lxc_container_get_interfaces(erlxc_state_t *ep, ETERM *arg)
+{
+    char **iface = NULL;
+    ETERM *t = NULL;
+    int i = 0;
+
+    t = erl_mk_empty_list();
+
+    iface = ep->c->get_interfaces(ep->c);
+
+    if (!iface)
+        return t;
+
+    for (i = 0; iface[i]; i++) {
+        t = erl_cons(erl_mk_binary(iface[i], strlen(iface[i])), t);
+        free(iface[i]);
+    }
+
+    free(iface);
+    return t;
+}
+
+    static ETERM *
 erlxc_list_active_containers(erlxc_state_t *ep, ETERM *arg)
 {
     return erlxc_list_containers(ep, arg, list_active_containers);

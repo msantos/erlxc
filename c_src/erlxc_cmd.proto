@@ -13,6 +13,7 @@ lxc_container_freeze/0
 lxc_container_get_cgroup_item/1
 lxc_container_get_config_item/1
 lxc_container_get_config_path/0
+lxc_container_get_interfaces/0
 lxc_container_get_keys/1
 lxc_container_init_pid/0
 lxc_container_load_config/1
