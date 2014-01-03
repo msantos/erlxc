@@ -116,10 +116,13 @@ config(#container{port = Port}, Options) ->
     [ begin
         case Item of
             <<>> ->
+                verbose(1, {clear_config, [Port]}, Options),
                 true = liblxc:clear_config(Port);
             {Key, Value} ->
+                verbose(1, {set_config_item, [Port, Key, Value]}, Options),
                 true = liblxc:set_config_item(Port, Key, Value);
             Key ->
+                verbose(1, {clear_config_item, [Port, Key]}, Options),
                 true = liblxc:clear_config_item(Port, Key)
         end
       end || Item <- Config ].
@@ -133,6 +136,7 @@ create(#container{port = Port}, Options) ->
     Flags = proplists:get_value(flags, Create, 0),
     Argv = proplists:get_value(argv, Create, []),
 
+    verbose(1, {create, [Port, Template, Bdevtype, Bdevspec, Flags, Argv]}, Options),
     true = liblxc:create(Port, Template, Bdevtype, Bdevspec, Flags, Argv).
 
 start(#container{port = Port}, Options) ->
@@ -140,6 +144,7 @@ start(#container{port = Port}, Options) ->
     UseInit = proplists:get_value(useinit, Start, false),
     Argv = proplists:get_value(argv, Start, []),
 
+    verbose(1, {start, [Port, UseInit, Argv]}, Options),
     true = liblxc:start(Port, bool(UseInit), Argv).
 
 %%--------------------------------------------------------------------
@@ -157,3 +162,12 @@ name(Name) ->
     % XXX possible to re-use container names
     N = binary:decode_unsigned(crypto:rand_bytes(4)),
     <<Name/binary, (i2b(N))/binary>>.
+
+verbose(Level, Msg, Opt) ->
+    Verbose = proplists:get_value(verbose, Opt, 0),
+    if
+        Verbose >= Level ->
+            error_logger:info_report([Msg, {options, Opt}]);
+        true ->
+            ok
+    end.

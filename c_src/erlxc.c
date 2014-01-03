@@ -273,7 +273,7 @@ erlxc_stats(erlxc_state_t *ep)
     unsigned long freed = 0;
 
     erl_eterm_statistics(&allocated, &freed);
-    VERBOSE(2, "allocated=%ld, freed=%ld", allocated, freed);
+    VERBOSE(0, "allocated=%ld, freed=%ld", allocated, freed);
     erl_eterm_release();
 }
 
