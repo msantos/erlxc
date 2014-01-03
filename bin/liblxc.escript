@@ -234,7 +234,6 @@ specs() ->
 -spec init_pid(port()) -> integer().
 -spec load_config(port(), iodata()) -> boolean().
 -spec name(port()) -> binary().
--spec opt(port()) -> integer().
 -spec permanent(port()) -> boolean().
 -spec reboot(port()) -> boolean().
 -spec running(port()) -> boolean().

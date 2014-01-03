@@ -986,12 +986,6 @@ erlxc_async_state_close(erlxc_state_t *ep, ETERM *arg)
  * Set erlxc state
  */
     static ETERM *
-erlxc_opt(erlxc_state_t *ep, ETERM *arg)
-{
-    return erl_mk_int(ep->opt);
-}
-
-    static ETERM *
 erlxc_type(erlxc_state_t *ep, ETERM *arg)
 {
     if ( (ep->opt & erlxc_opt_stop_on_exit) &&
