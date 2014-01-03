@@ -17,6 +17,7 @@ lxc_container_get_keys/1
 lxc_container_init_pid/0
 lxc_container_load_config/1
 lxc_container_name/0
+lxc_container_reboot/0
 lxc_container_running/0
 lxc_container_save_config/1
 lxc_container_set_cgroup_item/2

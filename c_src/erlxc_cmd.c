@@ -269,6 +269,12 @@ BADARG:
 }
 
     static ETERM *
+erlxc_lxc_container_reboot(erlxc_state_t *ep, ETERM *arg)
+{
+    return erlxc_bool(ep->c->reboot(ep->c));
+}
+
+    static ETERM *
 erlxc_lxc_container_freeze(erlxc_state_t *ep, ETERM *arg)
 {
     return erlxc_bool(ep->c->freeze(ep->c));

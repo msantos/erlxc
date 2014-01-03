@@ -234,6 +234,7 @@ specs() ->
 -spec name(port()) -> binary().
 -spec opt(port()) -> integer().
 -spec permanent(port()) -> boolean().
+-spec reboot(port()) -> boolean().
 -spec running(port()) -> boolean().
 -spec save_config(port(), iodata()) -> boolean().
 -spec set_config_item(port(), iodata(), iodata()) -> boolean().
