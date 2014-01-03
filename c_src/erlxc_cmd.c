@@ -762,7 +762,6 @@ erlxc_list_containers(erlxc_state_t *ep, ETERM *arg,
     ETERM *hd = NULL;
     char *path = NULL;
     char **names = NULL;
-    ETERM **reply = NULL;
     ETERM *t = NULL;
 
     arg = erlxc_list_head(&hd, arg);
@@ -783,17 +782,15 @@ erlxc_list_containers(erlxc_state_t *ep, ETERM *arg,
     if (n < 0)
         goto BADARG;
 
-    reply = erlxc_malloc(n * sizeof(ETERM **));
+    t = erl_mk_empty_list();
     for (i = 0; i < n; i++) {
-        reply[i] = erl_mk_binary(names[i], strnlen(names[i], MAXHOSTNAMELEN));
+        t = erl_cons(erl_mk_binary(names[i], strlen(names[i])), t);
         free(names[i]);
     }
 
     if (n > 0)
         free(names);
 
-    t = erl_mk_list(reply, n);
-    erl_free(reply);
     return t;
 
 BADARG:
