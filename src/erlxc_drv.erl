@@ -89,8 +89,11 @@ optarg({type, permanent})   -> switch("t", "permanent");
 optarg({type, transitory})  -> switch("t", "transitory");
 optarg({type, temporary})   -> switch("t", "temporary");
 optarg({errlog, Arg})       -> switch("e", Arg);
-optarg({verbose, Arg})      -> string:copies("-v ", Arg);
+optarg({verbose, Arg})      -> switch(string:copies("v", Arg));
 optarg(_)                   -> "".
+
+switch(Switch) ->
+    lists:concat(["-", Switch]).
 
 switch(Switch, Arg) when is_binary(Arg) ->
     switch(Switch, binary_to_list(Arg));
