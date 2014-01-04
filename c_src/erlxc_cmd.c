@@ -843,8 +843,10 @@ erlxc_free_argv(char **argv)
     if (argv == NULL)
         return;
 
-    for (i = 0; argv[i] != NULL; i++)
-        erl_free(argv[i]);
+    for (i = 0; argv[i]; i++)
+        free(argv[i]);
+
+    free(argv);
 }
 
 /*
