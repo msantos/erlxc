@@ -70,9 +70,10 @@ runit(Container) ->
     ].
 
 startit() ->
+    Verbose = list_to_integer(getenv("ERLXC_TEST_VERBOSE", "0")),
     N = binary:decode_unsigned(crypto:rand_bytes(1)),
     Name = <<"liblxc", (i2b(N))/binary>>,
-    Container = erlxc_drv:start(Name),
+    Container = erlxc_drv:start(Name, [{verbose, Verbose}]),
     Container.
 
 stopit(Container) ->

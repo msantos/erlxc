@@ -31,6 +31,7 @@ runit(Container) ->
     ].
 
 startit() ->
+    Verbose = list_to_integer(getenv("ERLXC_TEST_VERBOSE", "0")),
     Bridge = getenv("ERLXC_TEST_BRIDGE", <<"lxcbr0">>),
 
     % XXX this fails if ERLXC_TEST_BRIDGE=br0
@@ -42,9 +43,12 @@ startit() ->
 
     % XXX Generates the same config as above except adds duplicate
     % XXX lxc.network.link items, one with lxcbr0 and the other set to br0
-    Config = [{config, [
+    Config = [
+        {verbose, Verbose},
+        {config, [
             {<<"lxc.network.link">>, Bridge}
-        ]}],
+        ]}
+    ],
 
     erlxc:spawn(<<>>, Config).
 
