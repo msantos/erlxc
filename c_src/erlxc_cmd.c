@@ -32,8 +32,8 @@ erlxc_cmd(erlxc_state_t *ep, u_int32_t cmd, ETERM *arg)
 {
     erlxc_cmd_t *fun = NULL;
 
-    VERBOSE(2, "cmd=%d", cmd);
-    if (ep->verbose >= 2)
+    VERBOSE(3, "cmd=%d", cmd);
+    if (ep->verbose >= 3)
         erl_print_term(stderr, arg);
 
     if (cmd >= sizeof(cmds)/sizeof(cmds[0]))

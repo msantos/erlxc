@@ -184,8 +184,6 @@ erlxc_msg(erlxc_state_t *ep)
     
     len = ntohs(buf);
     
-    VERBOSE(2, "erlxc_msg: packet len = %u", len);
-    
     if (len >= UINT16_MAX || len < sizeof(buf))
         erl_err_quit("erlxc_msg: invalid len=%d (max=%d)", len, UINT16_MAX);
 
