@@ -250,6 +250,6 @@ specs() ->
 -spec type(port()) -> permanent | transitory | temporary.
 -spec unfreeze(port()) -> boolean().
 -spec wait(port(), iodata(), integer()) -> boolean().
--spec test_argv(port(), [binary()]) -> true.
+-spec test_argv(port(), [binary()]) -> [binary()].
 -spec version(port()) -> binary().
 ".
