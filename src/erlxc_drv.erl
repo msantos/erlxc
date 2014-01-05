@@ -71,6 +71,8 @@ getopts(Options) when is_list(Options) ->
                     permanent -> {type, permanent};
                     transitory -> {type, transitory};
                     temporary -> {type, temporary};
+                    nodaemonize -> {daemonize, false};
+                    nocloseallfds -> {closeallfds, false};
                     _ when is_atom(N) -> {N, true};
                     {_,_} -> N
                 end
@@ -83,14 +85,16 @@ getopts(Options) when is_list(Options) ->
 
     string:join(Cmd, " ").
 
-optarg({name, Arg})         -> switch("n", Arg);
-optarg({path, Arg})         -> switch("p", Arg);
-optarg({type, permanent})   -> switch("t", "permanent");
-optarg({type, transitory})  -> switch("t", "transitory");
-optarg({type, temporary})   -> switch("t", "temporary");
-optarg({errlog, Arg})       -> switch("e", Arg);
-optarg({verbose, Arg})      -> switch(string:copies("v", Arg));
-optarg(_)                   -> "".
+optarg({name, Arg})             -> switch("n", Arg);
+optarg({path, Arg})             -> switch("p", Arg);
+optarg({type, permanent})       -> switch("t", "permanent");
+optarg({type, transitory})      -> switch("t", "transitory");
+optarg({type, temporary})       -> switch("t", "temporary");
+optarg({errlog, Arg})           -> switch("e", Arg);
+optarg({daemonize, false})      -> switch("d", "nodaemonize");
+optarg({closeallfds, false})    -> switch("d", "nocloseallfds");
+optarg({verbose, Arg})          -> switch(string:copies("v", Arg));
+optarg(_)                       -> "".
 
 switch(Switch) ->
     lists:concat(["-", Switch]).

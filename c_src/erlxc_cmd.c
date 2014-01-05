@@ -227,7 +227,10 @@ erlxc_lxc_container_start(erlxc_state_t *ep, ETERM *arg)
             goto BADARG;
     }
 
-    if (!c->want_daemonize(c, 1))
+    if (!c->want_daemonize(c, (ep->opt & erlxc_opt_daemonize ? true : false)))
+        goto BADARG;
+
+    if (!c->want_close_all_fds(c, (ep->opt & erlxc_opt_closeallfds ? true : false)))
         goto BADARG;
 
     res = c->start(c, useinit, argv);

@@ -40,6 +40,8 @@
 enum {
     erlxc_opt_stop_on_exit = 1 << 0,        /* Stop the container when the port exits */
     erlxc_opt_destroy_on_exit = 1 << 1,     /* Destroy the container when the port exits (must be stopped) */
+    erlxc_opt_daemonize = 1 << 2,           /* Debug: allows disabling daemonize mode */
+    erlxc_opt_closeallfds = 1 << 3,         /* Debug: allows disabling closeallfds mode */
 };
 
 typedef struct {
