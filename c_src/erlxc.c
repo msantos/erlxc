@@ -290,12 +290,12 @@ usage(erlxc_state_t *ep)
             __progname, ERLXC_VERSION, lxc_get_version());
     (void)fprintf(stderr,
             "usage: %s -n <name> <options>\n"
-            "    -n               container name\n"
-            "    -d               debug: nodaemonize, nocloseallfds\n"
-            "    -e               error log\n"
-            "    -p               LXC path\n"
+            "    -n <name>        container name\n"
+            "    -e <path>        error log\n"
+            "    -p <path>        LXC path\n"
             "    -v               verbose mode\n"
-            "    -t               container type (permanent, transient, temporary)\n",
+            "    -d <option>      debug: nodaemonize, nocloseallfds\n"
+            "    -t <type>        container type (permanent, transient, temporary)\n",
             __progname
             );
 
