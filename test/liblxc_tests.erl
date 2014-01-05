@@ -129,8 +129,10 @@ name(Container) ->
     ?_assertMatch(<<"liblxc", _/binary>>, Reply).
 
 config_file_name(Container) ->
+    Name = liblxc:name(Container),
+    Path = liblxc:get_config_path(Container),
     Reply = liblxc:config_file_name(Container),
-    ?_assertEqual(true, is_binary(Reply)).
+    ?_assertMatch(Reply, <<Path/binary, "/", Name/binary, "/config">>).
 
 get_keys(Container) ->
     Bin = liblxc:get_keys(Container),
