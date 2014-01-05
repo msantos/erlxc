@@ -396,10 +396,12 @@ erlxc_lxc_container_config_file_name(erlxc_state_t *ep, ETERM *arg)
 {
     struct lxc_container *c = ep->c;
     char *name = NULL;
+    ETERM *t = NULL;
 
     name = c->config_file_name(c);
+    t = erlxc_bin(name);
     free(name);
-    return erlxc_bin(name);
+    return t;
 }
 
     static ETERM *
