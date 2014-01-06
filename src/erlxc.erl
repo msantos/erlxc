@@ -111,7 +111,16 @@ state(#container{port = Port} = Container, true, Options) ->
     end.
 
 config(#container{port = Port}, Options) ->
+    Path = proplists:get_value(config_path, Options, liblxc:get_config_path(Port)),
+
+    true = liblxc:set_config_path(Port, Path),
+
     Config = proplists:get_value(config, Options, []),
+
+    verbose(1, {config_path, [
+                liblxc:get_config_path(Port),
+                liblxc:config_file_name(Port)
+            ]}, Options),
 
     [ begin
         case Item of
