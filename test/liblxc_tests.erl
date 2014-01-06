@@ -103,7 +103,7 @@ create(Container) ->
         <<>>,
         <<>>,
         0,
-        [<<"-r">>, <<"precise">>]
+        []
     ),
 
     ?_assertEqual(true, Reply).
@@ -204,14 +204,12 @@ save_config(Container) ->
     ?_assertEqual(true, Reply).
 
 freeze(Container) ->
-    true = liblxc:freeze(Container),
-    Reply = liblxc:state(Container),
-    ?_assertEqual(<<"FROZEN">>, Reply).
+    Reply = liblxc:freeze(Container),
+    ?_assertEqual(true, Reply).
 
 unfreeze(Container) ->
-    true = liblxc:unfreeze(Container),
-    Reply = liblxc:state(Container),
-    ?_assertEqual(<<"RUNNING">>, Reply).
+    Reply = liblxc:unfreeze(Container),
+    ?_assertEqual(true, Reply).
 
 i2b(N) ->
     list_to_binary(integer_to_list(N)).
