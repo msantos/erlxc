@@ -66,17 +66,15 @@ getopts(Options) when is_list(Options) ->
     Exec = proplists:get_value(exec, Options, "sudo"),
     Progname = proplists:get_value(progname, Options, progname()),
 
-    Expand = [ begin
-                case N of
-                    permanent -> {type, permanent};
-                    transitory -> {type, transitory};
-                    temporary -> {type, temporary};
-                    nodaemonize -> {daemonize, false};
-                    nocloseallfds -> {closeallfds, false};
-                    _ when is_atom(N) -> {N, true};
-                    {_,_} -> N
-                end
-        end || N <- Options ],
+    Expand = lists:map(fun
+                    (permanent) -> {type, permanent};
+                    (transitory) -> {type, transitory};
+                    (temporary) -> {type, temporary};
+                    (nodaemonize) -> {daemonize, false};
+                    (nocloseallfds) -> {closeallfds, false};
+                    (N) when is_atom(N) -> {N, true};
+                    ({_,_} = N) -> N
+                end, Options),
 
     Opt = lists:ukeysort(1, Expand),
 
