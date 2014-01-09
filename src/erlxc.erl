@@ -17,7 +17,7 @@
 -export([
         spawn/0, spawn/1, spawn/2,
 
-        type/1,
+        type/1, type/2,
         temporary/1, transitory/1, permanent/1,
 
         send/2,
@@ -27,29 +27,30 @@
         console/1
     ]).
 -export([
-        chroot/2, config/2
+        new/0, new/1, new/2,
+        attach/1, attach/2,
+        chroot/2,
+        config/2,
+        create/2,
+        start/2
     ]).
 
--type container() :: #container{port::port(),console::port()}.
-
--spec spawn() -> container().
--spec spawn(string() | binary()) -> container().
--spec spawn(string() | binary(),list()) -> container().
+-spec spawn() -> #container{}.
+-spec spawn(string() | binary()) -> #container{}.
+-spec spawn(string() | binary(),list()) -> #container{}.
 spawn() ->
     erlxc:spawn(<<>>, []).
 spawn(Name) ->
     erlxc:spawn(Name, []).
-spawn(<<>>, Options) ->
-    erlxc:spawn(name(<<"erlxc">>), Options ++ [temporary]);
 spawn(Name, Options) ->
-    Port = erlxc_drv:start(Name, Options ++ [transitory]),
+    Port = new(Name, Options),
     boot(#container{port = Port}, Options).
 
--spec send(container(),iodata()) -> 'true'.
+-spec send(#container{},iodata()) -> 'true'.
 send(#container{console = Console}, Data) ->
     erlxc_console:send(Console, Data).
 
--spec exit(container(),'kill' | 'normal') -> boolean().
+-spec exit(#container{},'kill' | 'normal') -> boolean().
 exit(#container{port = Port}, normal) ->
     liblxc:shutdown(Port, 0);
 
@@ -58,6 +59,12 @@ exit(#container{port = Port}, kill) ->
 
 type(#container{port = Port}) ->
     liblxc:type(Port).
+
+type(Container, Type) when
+    Type =:= temporary;
+    Type =:= transitory;
+    Type =:= permanent ->
+    ?MODULE:Type(Container).
 
 temporary(#container{port = Port}) ->
     liblxc:temporary(Port).
@@ -70,6 +77,100 @@ permanent(#container{port = Port}) ->
 
 container(#container{port = Port}) -> Port.
 console(#container{console = Port}) -> Port.
+
+%%--------------------------------------------------------------------
+%%% Container configuration
+%%--------------------------------------------------------------------
+-spec new() -> port().
+-spec new(string() | binary()) -> port().
+-spec new(string() | binary(),list()) -> port().
+new() ->
+    new(<<>>, []).
+new(Name) ->
+    new(Name, []).
+new(<<>>, Options) ->
+    new(name(<<"erlxc">>), Options ++ [temporary]);
+new(Name, Options) ->
+    erlxc_drv:start(Name, Options ++ [transitory]).
+
+-spec attach(#container{}) -> #container{}.
+-spec attach(#container{}, list()) -> #container{}.
+attach(Container) ->
+    attach(Container, []).
+attach(#container{port = Port, console = undefined} = Container, Options) ->
+    Name = liblxc:name(Port),
+    Console = erlxc_console:start(Name, Options),
+    Container#container{console = Console};
+attach(#container{console = Console0} = Container, Options) ->
+    catch erlxc_console:stop(Console0),
+    attach(Container#container{console = undefined}, Options).
+
+-spec config(#container{}, list()) -> 'ok'.
+config(#container{port = Port}, Options) ->
+    Path = proplists:get_value(config_path, Options, liblxc:get_config_path(Port)),
+    true = liblxc:set_config_path(Port, Path),
+
+    Config = proplists:get_value(config, Options, []),
+
+    verbose(1, {config_path, [
+                liblxc:get_config_path(Port),
+                liblxc:config_file_name(Port)
+            ]}, Options),
+
+    lists:foreach(fun
+            (<<>>) ->
+                verbose(1, {clear_config, [Port]}, Options),
+                true = liblxc:clear_config(Port);
+            ({Key, Value}) ->
+                verbose(1, {set_config_item, [Port, Key, Value]}, Options),
+                true = liblxc:set_config_item(Port, Key, Value);
+            (Key) ->
+                verbose(1, {clear_config_item, [Port, Key]}, Options),
+                true = liblxc:clear_config_item(Port, Key)
+        end, Config),
+
+    true = liblxc:save_config(Port, liblxc:config_file_name(Port)),
+    ok.
+
+-spec chroot(#container{}, list()) -> 'ok'.
+chroot(#container{port = Port}, Options) ->
+    ConfigPath = proplists:get_value(config_path, Options, liblxc:get_config_path(Port)),
+    Chroot = proplists:get_value(chroot, Options, []),
+
+    Dir = proplists:get_value(dir, Chroot, []),
+    Copy = proplists:get_value(copy, Chroot, []),
+    File = proplists:get_value(file, Chroot, []),
+
+    Name = liblxc:name(Port),
+    Path = <<(maybe_binary(ConfigPath))/binary, "/", Name/binary>>,
+
+    make(dir, Path, Dir, Options),
+    make(copy, Path, Copy, Options),
+    make(file, Path, File, Options).
+
+-spec create(#container{}, list()) -> 'ok'.
+create(#container{port = Port}, Options) ->
+    Create = proplists:get_value(create, Options, []),
+
+    Template = proplists:get_value(template, Create, <<"ubuntu">>),
+    Bdevtype = proplists:get_value(bdevtype, Create, <<>>),
+    Bdevspec = proplists:get_value(bdevspec, Create, <<>>),
+    Flags = proplists:get_value(flags, Create, 0),
+    Argv = proplists:get_value(argv, Create, []),
+
+    verbose(1, {create, [Port, Template, Bdevtype, Bdevspec, Flags, Argv]}, Options),
+    true = liblxc:create(Port, Template, Bdevtype, Bdevspec, Flags, Argv),
+    ok.
+
+-spec start(#container{}, list()) -> 'ok'.
+start(#container{port = Port}, Options) ->
+    Start = proplists:get_value(start, Options, []),
+    UseInit = proplists:get_value(useinit, Start, false),
+    Argv = proplists:get_value(argv, Start, []),
+
+    verbose(1, {start, [Port, UseInit, Argv]}, Options),
+    true = liblxc:start(Port, bool(UseInit), Argv),
+    ok.
 
 %%--------------------------------------------------------------------
 %%% Container state
@@ -100,9 +201,7 @@ state(#container{port = Port} = Container, true, Options) ->
     case erlxc_drv:event(Port, infinity) of
         {state, <<"RUNNING">>} ->
             true = liblxc:async_state_close(Port),
-            Name = liblxc:name(Port),
-            Console = erlxc_console:start(Name),
-            Container#container{console = Console};
+            attach(Container);
         {state, <<"STOPPED">>} ->
             config(Container, Options),
             start(Container, Options),
@@ -116,66 +215,6 @@ state(#container{port = Port} = Container, true, Options) ->
         {state, State} ->
             erlang:error({unsupported, State, Options})
     end.
-
-config(#container{port = Port}, Options) ->
-    Path = proplists:get_value(config_path, Options, liblxc:get_config_path(Port)),
-    true = liblxc:set_config_path(Port, Path),
-
-    Config = proplists:get_value(config, Options, []),
-
-    verbose(1, {config_path, [
-                liblxc:get_config_path(Port),
-                liblxc:config_file_name(Port)
-            ]}, Options),
-
-    lists:foreach(fun
-            (<<>>) ->
-                verbose(1, {clear_config, [Port]}, Options),
-                true = liblxc:clear_config(Port);
-            ({Key, Value}) ->
-                verbose(1, {set_config_item, [Port, Key, Value]}, Options),
-                true = liblxc:set_config_item(Port, Key, Value);
-            (Key) ->
-                verbose(1, {clear_config_item, [Port, Key]}, Options),
-                true = liblxc:clear_config_item(Port, Key)
-        end, Config),
-
-    true = liblxc:save_config(Port, liblxc:config_file_name(Port)).
-
-chroot(#container{port = Port}, Options) ->
-    ConfigPath = proplists:get_value(config_path, Options, liblxc:get_config_path(Port)),
-    Chroot = proplists:get_value(chroot, Options, []),
-
-    Dir = proplists:get_value(dir, Chroot, []),
-    Copy = proplists:get_value(copy, Chroot, []),
-    File = proplists:get_value(file, Chroot, []),
-
-    Name = liblxc:name(Port),
-    Path = <<(maybe_binary(ConfigPath))/binary, "/", Name/binary>>,
-
-    make(dir, Path, Dir, Options),
-    make(copy, Path, Copy, Options),
-    make(file, Path, File, Options).
-
-create(#container{port = Port}, Options) ->
-    Create = proplists:get_value(create, Options, []),
-
-    Template = proplists:get_value(template, Create, <<"ubuntu">>),
-    Bdevtype = proplists:get_value(bdevtype, Create, <<>>),
-    Bdevspec = proplists:get_value(bdevspec, Create, <<>>),
-    Flags = proplists:get_value(flags, Create, 0),
-    Argv = proplists:get_value(argv, Create, []),
-
-    verbose(1, {create, [Port, Template, Bdevtype, Bdevspec, Flags, Argv]}, Options),
-    true = liblxc:create(Port, Template, Bdevtype, Bdevspec, Flags, Argv).
-
-start(#container{port = Port}, Options) ->
-    Start = proplists:get_value(start, Options, []),
-    UseInit = proplists:get_value(useinit, Start, false),
-    Argv = proplists:get_value(argv, Start, []),
-
-    verbose(1, {start, [Port, UseInit, Argv]}, Options),
-    true = liblxc:start(Port, bool(UseInit), Argv).
 
 %%--------------------------------------------------------------------
 %%% Internal functions
