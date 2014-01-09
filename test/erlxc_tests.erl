@@ -17,6 +17,7 @@
 
 -include_lib("eunit/include/eunit.hrl").
 -include_lib("erlxc/include/erlxc.hrl").
+-include_lib("kernel/include/file.hrl").
 
 erlxc_test_() ->
     {setup,
@@ -27,19 +28,13 @@ erlxc_test_() ->
 
 runit(Container) ->
     [
+        chroot(Container),
         erlxc_exit(Container)
     ].
 
 startit() ->
     Verbose = list_to_integer(getenv("ERLXC_TEST_VERBOSE", "0")),
     Bridge = getenv("ERLXC_TEST_BRIDGE", <<"lxcbr0">>),
-
-    % XXX this fails if ERLXC_TEST_BRIDGE=br0
-%    Config = [{config, [
-%            {<<"lxc.network.type">>, <<"veth">>},
-%            {<<"lxc.network.link">>, Bridge},
-%            {<<"lxc.network.flags">>, <<"up">>}
-%        ]}],
 
     % XXX Generates the same config as above except adds duplicate
     % XXX lxc.network.link items, one with lxcbr0 and the other set to br0
@@ -55,6 +50,30 @@ startit() ->
 stopit(Container) ->
     erlxc_drv:stop(Container#container.port).
 
+chroot(Container) ->
+    Chroot = [
+        {config_path, priv_dir()},
+        {chroot, [
+                {dir, [
+                    "/tmp/erlxc",
+                    "etc",
+                    "bin",
+                    {"home/test", #file_info{mode = 8#700}}
+                ]},
+                {copy, [
+                    {"/etc/passwd", "etc/passwd"},
+                    {"/bin/ls", "bin/ls", 8#755}
+                ]},
+                {file, [
+                    "home/test/empty",
+                    {"home/test/.profile", <<"export PATH=/sbin:/bin:/usr/sbin:/usr/bin">>},
+                    {"home/test/true", <<>>, #file_info{mode = 8#755}}
+                ]}
+        ]}
+    ],
+    Reply = erlxc:chroot(Container, Chroot),
+    ?_assertEqual(ok, ok).
+
 erlxc_exit(Container) ->
     true = erlxc:exit(Container, kill),
     Reply = liblxc:running(Container#container.port),
@@ -64,4 +83,18 @@ getenv(Var, Default) ->
     case os:getenv(Var) of
         false -> Default;
         N -> N
+    end.
+
+priv_dir() ->
+    Module = erlxc,
+    case code:priv_dir(Module) of
+        {error, bad_name} ->
+            filename:join([
+                filename:dirname(code:which(Module)),
+                "..",
+                "priv",
+                "test"
+            ]);
+        Dir ->
+            filename:join([Dir, "test"])
     end.
