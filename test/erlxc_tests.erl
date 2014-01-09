@@ -52,7 +52,7 @@ stopit(Container) ->
 
 chroot(Container) ->
     Chroot = [
-        {config_path, priv_dir()},
+        {path, priv_dir()},
         {chroot, [
                 {dir, [
                     "/tmp/erlxc",

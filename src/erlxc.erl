@@ -43,8 +43,8 @@ spawn() ->
 spawn(Name) ->
     erlxc:spawn(Name, []).
 spawn(Name, Options) ->
-    Port = new(Name, Options),
-    boot(#container{port = Port}, Options).
+    Container = new(Name, Options),
+    boot(Container, Options).
 
 -spec send(#container{},iodata()) -> 'true'.
 send(#container{console = Console}, Data) ->
@@ -81,9 +81,9 @@ console(#container{console = Port}) -> Port.
 %%--------------------------------------------------------------------
 %%% Container configuration
 %%--------------------------------------------------------------------
--spec new() -> port().
--spec new(string() | binary()) -> port().
--spec new(string() | binary(),proplists:proplist()) -> port().
+-spec new() -> #container{}.
+-spec new(string() | binary()) -> #container{}.
+-spec new(string() | binary(),proplists:proplist()) -> #container{}.
 new() ->
     new(<<>>, []).
 new(Name) ->
@@ -91,7 +91,8 @@ new(Name) ->
 new(<<>>, Options) ->
     new(name(<<"erlxc">>), Options ++ [temporary]);
 new(Name, Options) ->
-    erlxc_drv:start(Name, Options ++ [transitory]).
+    Port = erlxc_drv:start(Name, Options ++ [transitory]),
+    #container{port = Port}.
 
 -spec attach(#container{}) -> #container{}.
 -spec attach(#container{}, proplists:proplist()) -> #container{}.
@@ -107,12 +108,9 @@ attach(#container{console = Console0} = Container, Options) ->
 
 -spec config(#container{}, proplists:proplist()) -> 'ok'.
 config(#container{port = Port}, Options) ->
-    Path = proplists:get_value(config_path, Options, liblxc:get_config_path(Port)),
-    true = liblxc:set_config_path(Port, Path),
-
     Config = proplists:get_value(config, Options, []),
 
-    verbose(1, {config_path, [
+    verbose(1, {path, [
                 liblxc:get_config_path(Port),
                 liblxc:config_file_name(Port)
             ]}, Options),
@@ -134,7 +132,7 @@ config(#container{port = Port}, Options) ->
 
 -spec chroot(#container{}, proplists:proplist()) -> 'ok'.
 chroot(#container{port = Port}, Options) ->
-    ConfigPath = proplists:get_value(config_path, Options, liblxc:get_config_path(Port)),
+    ConfigPath = proplists:get_value(path, Options, liblxc:get_config_path(Port)),
     Chroot = proplists:get_value(chroot, Options, []),
 
     Dir = proplists:get_value(dir, Chroot, []),
@@ -183,8 +181,6 @@ boot(#container{port = Port} = Container, Options) ->
     state(Container, Options).
 
 state(#container{port = Port} = Container, Options) ->
-    Path = proplists:get_value(config_path, Options, liblxc:get_config_path(Port)),
-    true = liblxc:set_config_path(Port, Path),
     state(Container, liblxc:defined(Port), Options).
 state(#container{port = Port} = Container, false, Options) ->
     case erlxc_drv:event(Port, infinity) of
@@ -201,7 +197,7 @@ state(#container{port = Port} = Container, true, Options) ->
     case erlxc_drv:event(Port, infinity) of
         {state, <<"RUNNING">>} ->
             true = liblxc:async_state_close(Port),
-            attach(Container);
+            attach(Container, Options);
         {state, <<"STOPPED">>} ->
             config(Container, Options),
             start(Container, Options),
