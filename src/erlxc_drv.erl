@@ -20,7 +20,7 @@
 -export([getopts/1]).
 
 -spec start(nonempty_string() | binary()) -> port().
--spec start(nonempty_string() | binary(),[atom() | tuple()]) -> port().
+-spec start(nonempty_string() | binary(),proplists:proplist()) -> port().
 start(Name) ->
     start(Name, []).
 start(Name, Options) ->
