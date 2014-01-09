@@ -232,6 +232,7 @@ name(Name) ->
     N = binary:decode_unsigned(crypto:rand_bytes(4)),
     <<Name/binary, (i2b(N))/binary>>.
 
+-spec verbose(integer(),{atom(), list()}, proplists:proplist()) -> 'ok'.
 verbose(Level, Msg, Opt) ->
     Verbose = proplists:get_value(verbose, Opt, 0),
     if
@@ -241,9 +242,11 @@ verbose(Level, Msg, Opt) ->
             ok
     end.
 
+-spec maybe_binary(file:filename_all()) -> binary().
 maybe_binary(N) when is_list(N) -> list_to_binary(N);
 maybe_binary(N) when is_binary(N) -> N.
 
+-spec make('dir' | 'copy' | 'file', binary(), [file:filename_all() | tuple()], proplists:proplist()) -> 'ok'.
 make(dir, Path, List, Options) ->
     lists:foreach(fun
             ({Dir, Info}) ->
@@ -275,6 +278,10 @@ make(file, Path, List, Options) ->
                 ok = file(Path, File, <<>>)
         end, List).
 
+-type filemode() :: file:filename_all() | integer() | 'undefined'.
+
+-spec dir(binary(), file:filename_all()) -> 'ok' | {'error', file:posix()}.
+-spec dir(binary(), file:filename_all(), filemode()) -> 'ok' | {'error', file:posix()}.
 dir(Path, Dir) ->
     dir(Path, Dir, undefined).
 dir(Path, Dir, Info) ->
@@ -296,6 +303,8 @@ dir_1(Path, Dir0, Info) ->
             Error
     end.
 
+-spec copy(binary(), file:filename_all(), file:filename_all()) -> 'ok' | {'error', file:posix()}.
+-spec copy(binary(), file:filename_all(), file:filename_all(), filemode()) -> 'ok' | {'error', file:posix()}.
 copy(Path, Source, Destination) ->
     copy(Path, Source, Destination, undefined).
 copy(Path, Source, Destination, Info) ->
@@ -316,6 +325,8 @@ copy_1(Path, Source, Destination0, Info) ->
             Error
     end.
 
+-spec file(binary(), file:filename_all(), iodata()) -> 'ok' | {'error', file:posix()}.
+-spec file(binary(), file:filename_all(), iodata(), filemode()) -> 'ok' | {'error', file:posix()}.
 file(Path, File, Content) ->
     file(Path, File, Content, undefined).
 file(Path, File, Content, Info) ->
@@ -336,6 +347,7 @@ file_1(Path, File0, Content, Info) ->
             Error
     end.
 
+-spec write_file_info(file:filename_all(), filemode()) -> 'ok' | {'error', file:posix()}.
 write_file_info(_File, undefined) ->
     ok;
 write_file_info(File, #file_info{} = Info) ->
