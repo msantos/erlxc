@@ -997,7 +997,7 @@ erlxc_type(erlxc_state_t *ep, ETERM *arg)
         return erl_mk_atom("temporary");
 
     if (ep->opt & erlxc_opt_stop_on_exit)
-        return erl_mk_atom("transitory");
+        return erl_mk_atom("transient");
 
     return erl_mk_atom("permanent");
 }
@@ -1011,7 +1011,7 @@ erlxc_temporary(erlxc_state_t *ep, ETERM *arg)
 }
 
     static ETERM *
-erlxc_transitory(erlxc_state_t *ep, ETERM *arg)
+erlxc_transient(erlxc_state_t *ep, ETERM *arg)
 {
     ep->opt |= erlxc_opt_stop_on_exit;
     ep->opt &= ~erlxc_opt_destroy_on_exit;

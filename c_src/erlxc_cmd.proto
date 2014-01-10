@@ -34,6 +34,6 @@ lxc_container_wait/2
 permanent/0
 temporary/0
 test_argv/1
-transitory/0
+transient/0
 type/0
 version/0

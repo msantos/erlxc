@@ -18,7 +18,7 @@
         spawn/0, spawn/1, spawn/2,
 
         type/1, type/2,
-        temporary/1, transitory/1, permanent/1,
+        temporary/1, transient/1, permanent/1,
 
         send/2,
         exit/2,
@@ -66,15 +66,15 @@ type(#container{port = Port}) ->
 
 type(Container, Type) when
     Type =:= temporary;
-    Type =:= transitory;
+    Type =:= transient;
     Type =:= permanent ->
     ?MODULE:Type(Container).
 
 temporary(#container{port = Port}) ->
     liblxc:temporary(Port).
 
-transitory(#container{port = Port}) ->
-    liblxc:transitory(Port).
+transient(#container{port = Port}) ->
+    liblxc:transient(Port).
 
 permanent(#container{port = Port}) ->
     liblxc:permanent(Port).
@@ -95,7 +95,7 @@ new(Name) ->
 new(<<>>, Options) ->
     new(name(<<"erlxc">>), Options ++ [temporary]);
 new(Name, Options) ->
-    Port = erlxc_drv:start(Name, Options ++ [transitory]),
+    Port = erlxc_drv:start(Name, Options ++ [transient]),
     #container{port = Port}.
 
 -spec connect(container()) -> container().

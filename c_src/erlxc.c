@@ -76,7 +76,7 @@ main(int argc, char *argv[])
                     ep->opt |= erlxc_opt_stop_on_exit;
                     ep->opt |= erlxc_opt_destroy_on_exit;
                 }
-                else if (strcmp("transitory", optarg) == 0) {
+                else if (strcmp("transient", optarg) == 0) {
                     ep->opt |= erlxc_opt_stop_on_exit;
                     ep->opt &= ~erlxc_opt_destroy_on_exit;
                 }

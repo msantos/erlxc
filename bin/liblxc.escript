@@ -246,8 +246,8 @@ specs() ->
 -spec state(port()) -> binary().
 -spec stop(port()) -> boolean().
 -spec temporary(port()) -> boolean().
--spec transitory(port()) -> boolean().
--spec type(port()) -> permanent | transitory | temporary.
+-spec transient(port()) -> boolean().
+-spec type(port()) -> 'permanent' | 'transient' | 'temporary'.
 -spec unfreeze(port()) -> boolean().
 -spec wait(port(), iodata(), integer()) -> boolean().
 -spec test_argv(port(), [binary()]) -> [binary()].

@@ -27,7 +27,7 @@ start(Name, Options) ->
     Cmd = getopts([{name, Name}] ++ Options),
     open_port({spawn, Cmd}, [{packet, 2}, binary]).
 
--spec call(port(),binary()) -> 'permanent' | 'transitory' | 'temporary' | 'none' | boolean() | iodata() | integer().
+-spec call(port(),binary()) -> 'permanent' | 'transient' | 'temporary' | 'none' | boolean() | iodata() | integer().
 call(Port, Data) when is_port(Port), is_binary(Data), byte_size(Data) < 16#ffff ->
     true = erlang:port_command(Port, Data),
     Reply = receive
@@ -68,7 +68,7 @@ getopts(Options) when is_list(Options) ->
 
     Expand = lists:map(fun
                     (permanent) -> {type, permanent};
-                    (transitory) -> {type, transitory};
+                    (transient) -> {type, transient};
                     (temporary) -> {type, temporary};
                     (nodaemonize) -> {daemonize, false};
                     (nocloseallfds) -> {closeallfds, false};
@@ -86,7 +86,7 @@ getopts(Options) when is_list(Options) ->
 optarg({name, Arg})             -> switch("n", Arg);
 optarg({path, Arg})             -> switch("p", Arg);
 optarg({type, permanent})       -> switch("t", "permanent");
-optarg({type, transitory})      -> switch("t", "transitory");
+optarg({type, transient})       -> switch("t", "transient");
 optarg({type, temporary})       -> switch("t", "temporary");
 optarg({errlog, Arg})           -> switch("e", Arg);
 optarg({daemonize, false})      -> switch("d", "nodaemonize");
