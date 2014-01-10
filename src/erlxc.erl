@@ -28,7 +28,7 @@
     ]).
 -export([
         new/0, new/1, new/2,
-        attach/1, attach/2,
+        connect/1, connect/2,
         chroot/2,
         config/2,
         create/2,
@@ -94,17 +94,17 @@ new(Name, Options) ->
     Port = erlxc_drv:start(Name, Options ++ [transitory]),
     #container{port = Port}.
 
--spec attach(#container{}) -> #container{}.
--spec attach(#container{}, proplists:proplist()) -> #container{}.
-attach(Container) ->
-    attach(Container, []).
-attach(#container{port = Port, console = undefined} = Container, Options) ->
+-spec connect(#container{}) -> #container{}.
+-spec connect(#container{}, proplists:proplist()) -> #container{}.
+connect(Container) ->
+    connect(Container, []).
+connect(#container{port = Port, console = undefined} = Container, Options) ->
     Name = liblxc:name(Port),
     Console = erlxc_console:start(Name, Options),
     Container#container{console = Console};
-attach(#container{console = Console0} = Container, Options) ->
+connect(#container{console = Console0} = Container, Options) ->
     catch erlxc_console:stop(Console0),
-    attach(Container#container{console = undefined}, Options).
+    connect(Container#container{console = undefined}, Options).
 
 -spec config(#container{}, proplists:proplist()) -> 'ok'.
 config(#container{port = Port}, Options) ->
@@ -197,7 +197,7 @@ state(#container{port = Port} = Container, true, Options) ->
     case erlxc_drv:event(Port, infinity) of
         {state, <<"RUNNING">>} ->
             true = liblxc:async_state_close(Port),
-            attach(Container, Options);
+            connect(Container, Options);
         {state, <<"STOPPED">>} ->
             config(Container, Options),
             start(Container, Options),
