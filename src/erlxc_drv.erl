@@ -24,8 +24,8 @@
 start(Name) ->
     start(Name, []).
 start(Name, Options) ->
-    Cmd = getopts([{name, Name}] ++ Options),
-    open_port({spawn, Cmd}, [{packet, 2}, binary]).
+    [Cmd|Argv] = getopts([{name, Name}] ++ Options),
+    open_port({spawn_executable, Cmd}, [{args, Argv}, {packet, 2}, binary]).
 
 -spec call(port(),binary()) -> 'permanent' | 'transient' | 'temporary' | 'none' | boolean() | iodata() | integer().
 call(Port, Data) when is_port(Port), is_binary(Data), byte_size(Data) < 16#ffff ->
@@ -62,6 +62,7 @@ stop(Port) when is_port(Port) ->
 %%--------------------------------------------------------------------
 %%% Internal functions
 %%--------------------------------------------------------------------
+-spec getopts(proplists:proplist()) -> list(string() | [string()]).
 getopts(Options) when is_list(Options) ->
     Exec = proplists:get_value(exec, Options, "sudo"),
     Progname = proplists:get_value(progname, Options, progname()),
@@ -79,9 +80,8 @@ getopts(Options) when is_list(Options) ->
     Opt = lists:ukeysort(1, Expand),
 
     Switches = [ optarg(Arg) || Arg <- Opt ],
-    Cmd = [ N || N <- [Exec, Progname|Switches], N /= ""],
-
-    string:join(Cmd, " ").
+    [Cmd|Argv] = [ N || N <- [Exec, Progname|Switches], N /= ""],
+    [find_executable(Cmd)|Argv].
 
 optarg({name, Arg})             -> switch("n", Arg);
 optarg({path, Arg})             -> switch("p", Arg);
@@ -100,7 +100,15 @@ switch(Switch) ->
 switch(Switch, Arg) when is_binary(Arg) ->
     switch(Switch, binary_to_list(Arg));
 switch(Switch, Arg) ->
-    lists:concat(["-", Switch, " ", Arg]).
+    [switch(Switch), Arg].
+
+find_executable(Exe) ->
+    case os:find_executable(Exe) of
+        false ->
+            erlang:error({executable_not_found, Exe});
+        N ->
+            N
+    end.
 
 basedir(Module) ->
     case code:priv_dir(Module) of
