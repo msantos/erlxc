@@ -108,8 +108,7 @@ basedir(Module) ->
             filename:join([
                 filename:dirname(code:which(Module)),
                 "..",
-                "priv",
-                Module
+                "priv"
             ]);
         Dir ->
             Dir
