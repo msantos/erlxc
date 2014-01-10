@@ -180,7 +180,7 @@ NULL values are represented by the empty binary (<<>>).
         Removes all resources associated with the container, including
         deleting the container filesystem.
 
-    get_config_item(Container, Item)  -> binary() | 'none'.
+    get_config_item(Container, Item)  -> binary() | 'false'.
 
         Types   Container = pid()
                 Item = iodata()

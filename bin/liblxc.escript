@@ -225,8 +225,8 @@ specs() ->
 -spec defined(port()) -> boolean().
 -spec destroy(port()) -> boolean().
 -spec freeze(port()) -> boolean().
--spec get_config_item(port(), iodata())  -> binary() | 'none'.
--spec get_cgroup_item(port(), iodata())  -> binary() | 'none'.
+-spec get_config_item(port(), iodata())  -> binary() | 'false'.
+-spec get_cgroup_item(port(), iodata())  -> binary() | 'false'.
 -spec get_config_path(port()) -> binary().
 -spec get_interfaces(port()) -> [binary()].
 -spec get_ips(port(), iodata(), iodata(), integer()) -> [binary()].

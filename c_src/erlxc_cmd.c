@@ -468,7 +468,7 @@ erlxc_lxc_container_get_config_item(erlxc_state_t *ep, ETERM *arg)
     /* 0 is ??? */
     if (n < 1) {
         erl_free(key);
-        return erl_mk_atom("none");
+        return erl_mk_atom("false");
     }
 
     /* account for null */
@@ -596,7 +596,7 @@ erlxc_lxc_container_get_cgroup_item(erlxc_state_t *ep, ETERM *arg)
     /* 0 is ??? */
     if (n < 1) {
         erl_free(key);
-        return erl_mk_atom("none");
+        return erl_mk_atom("false");
     }
 
     /* account for null */
