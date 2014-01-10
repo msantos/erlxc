@@ -79,7 +79,7 @@ getopts(Options) when is_list(Options) ->
 
     Opt = lists:ukeysort(1, Expand),
 
-    Switches = [ optarg(Arg) || Arg <- Opt ],
+    Switches = lists:append([ optarg(N) || N <- Opt ]),
     [Cmd|Argv] = [ N || N <- [Exec, Progname|Switches], N /= ""],
     [find_executable(Cmd)|Argv].
 
@@ -95,12 +95,12 @@ optarg({verbose, Arg})          -> switch(string:copies("v", Arg));
 optarg(_)                       -> "".
 
 switch(Switch) ->
-    lists:concat(["-", Switch]).
+    [lists:concat(["-", Switch])].
 
 switch(Switch, Arg) when is_binary(Arg) ->
     switch(Switch, binary_to_list(Arg));
 switch(Switch, Arg) ->
-    [switch(Switch), Arg].
+    [lists:concat(["-", Switch]), Arg].
 
 find_executable(Exe) ->
     case os:find_executable(Exe) of
