@@ -34,6 +34,7 @@
         create/2,
         start/2
     ]).
+-export([dir/2, copy/2, file/2]).
 
 -export_type([container/0]).
 
@@ -110,7 +111,7 @@ connect(#container{console = Console0} = Container, Options) ->
     catch erlxc_console:stop(Console0),
     connect(Container#container{console = undefined}, Options).
 
--spec config(container(), proplists:proplist()) -> 'ok'.
+-spec config(container(), proplists:proplist()) -> 'true'.
 config(#container{port = Port}, Options) ->
     Config = proplists:get_value(config, Options, []),
 
@@ -122,19 +123,18 @@ config(#container{port = Port}, Options) ->
     lists:foreach(fun
             (<<>>) ->
                 verbose(1, {clear_config, [Port]}, Options),
-                true = liblxc:clear_config(Port);
+                call(Port, clear_config, []);
             ({Key, Value}) ->
                 verbose(1, {set_config_item, [Port, Key, Value]}, Options),
-                true = liblxc:set_config_item(Port, Key, Value);
+                call(Port, set_config_item, [Key, Value]);
             (Key) ->
                 verbose(1, {clear_config_item, [Port, Key]}, Options),
-                true = liblxc:clear_config_item(Port, Key)
+                call(Port, clear_config_item, [Key])
         end, Config),
 
-    true = liblxc:save_config(Port, liblxc:config_file_name(Port)),
-    ok.
+    call(Port, save_config, [liblxc:config_file_name(Port)]).
 
--spec chroot(container(), proplists:proplist()) -> 'ok'.
+-spec chroot(container(), proplists:proplist()) -> 'true'.
 chroot(#container{port = Port}, Options) ->
     ConfigPath = proplists:get_value(path, Options, liblxc:get_config_path(Port)),
     Chroot = proplists:get_value(chroot, Options, []),
@@ -148,9 +148,11 @@ chroot(#container{port = Port}, Options) ->
 
     make(dir, Path, Dir, Options),
     make(copy, Path, Copy, Options),
-    make(file, Path, File, Options).
+    make(file, Path, File, Options),
 
--spec create(container(), proplists:proplist()) -> 'ok'.
+    true.
+
+-spec create(container(), proplists:proplist()) -> 'true'.
 create(#container{port = Port}, Options) ->
     Create = proplists:get_value(create, Options, []),
 
@@ -161,18 +163,16 @@ create(#container{port = Port}, Options) ->
     Argv = proplists:get_value(argv, Create, []),
 
     verbose(1, {create, [Port, Template, Bdevtype, Bdevspec, Flags, Argv]}, Options),
-    true = liblxc:create(Port, Template, Bdevtype, Bdevspec, Flags, Argv),
-    ok.
+    call(Port, create, [Template, Bdevtype, Bdevspec, Flags, Argv]).
 
--spec start(container(), proplists:proplist()) -> 'ok'.
+-spec start(container(), proplists:proplist()) -> 'true'.
 start(#container{port = Port}, Options) ->
     Start = proplists:get_value(start, Options, []),
     UseInit = proplists:get_value(useinit, Start, false),
     Argv = proplists:get_value(argv, Start, []),
 
     verbose(1, {start, [Port, UseInit, Argv]}, Options),
-    true = liblxc:start(Port, bool(UseInit), Argv),
-    ok.
+    call(Port, start, [bool(UseInit), Argv]).
 
 %%--------------------------------------------------------------------
 %%% Container state
@@ -181,7 +181,7 @@ start(#container{port = Port}, Options) ->
 % "STOPPED", "STARTING", "RUNNING", "STOPPING",
 % "ABORTING", "FREEZING", "FROZEN", "THAWED",
 boot(#container{port = Port} = Container, Options) ->
-    true = liblxc:async_state_notify(Port, 5),
+    call(Port, async_state_notify, [5]),
     state(Container, Options).
 
 state(#container{port = Port} = Container, Options) ->
@@ -200,14 +200,14 @@ state(#container{port = Port} = Container, false, Options) ->
 state(#container{port = Port} = Container, true, Options) ->
     case erlxc_drv:event(Port, infinity) of
         {state, <<"RUNNING">>} ->
-            true = liblxc:async_state_close(Port),
+            call(Port, async_state_close, []),
             connect(Container, Options);
         {state, <<"STOPPED">>} ->
             config(Container, Options),
             start(Container, Options),
             state(Container, Options);
         {state, <<"FROZEN">>} ->
-            true = liblxc:unfreeze(Port),
+            call(Port, unfreeze, []),
             state(Container, true, Options);
         {state, State} when State =:= <<"STARTING">>; State =:= <<"STOPPING">>;
                 State =:= <<"FREEZING">>; State =:= <<"THAWED">> ->
@@ -247,77 +247,34 @@ maybe_binary(N) when is_list(N) -> list_to_binary(N);
 maybe_binary(N) when is_binary(N) -> N.
 
 -spec make('dir' | 'copy' | 'file', binary(), [file:filename_all() | tuple()], proplists:proplist()) -> 'ok'.
-make(dir, Path, List, Options) ->
-    lists:foreach(fun
-            ({Dir, Info}) ->
-                verbose(1, {dir, [Dir, Info]}, Options),
-                ok = dir(Path, Dir, Info);
-            (Dir) ->
-                verbose(1, {dir, [Dir]}, Options),
-                ok = dir(Path, Dir)
-        end, List);
-make(copy, Path, List, Options) ->
-    lists:foreach(fun
-            ({Source, Destination}) ->
-                verbose(1, {copy, [Source, Destination]}, Options),
-                ok = copy(Path, Source, Destination);
-            ({Source, Destination, Info}) ->
-                verbose(1, {copy, [Source, Destination, Info]}, Options),
-                ok = copy(Path, Source, Destination, Info)
-        end, List);
-make(file, Path, List, Options) ->
-    lists:foreach(fun
-            ({File, Content, Info}) ->
-                verbose(1, {file, [File, Content, Info]}, Options),
-                ok = file(Path, File, Content, Info);
-            ({File, Content}) ->
-                verbose(1, {file, [File, Content]}, Options),
-                ok = file(Path, File, Content);
-            (File) when is_binary(File); is_list(File) ->
-                verbose(1, {file, [File]}, Options),
-                ok = file(Path, File, <<>>)
-        end, List).
+make(_Type, _Path, [], _Options) ->
+    ok;
+make(Type, Path, [Obj|Rest], Options) when Type =:= dir; Type =:= copy; Type =:= file ->
+    verbose(1, {Type, [Path, Obj]}, Options),
+    attempt(Type, Path, Obj),
+    make(Type, Path, Rest, Options).
 
 -type filemode() :: file:filename_all() | integer() | 'undefined'.
 
--spec dir(binary(), file:filename_all()) -> 'ok' | {'error', file:posix()}.
--spec dir(binary(), file:filename_all(), filemode()) -> 'ok' | {'error', file:posix()}.
-dir(Path, Dir) ->
-    dir(Path, Dir, undefined).
-dir(Path, Dir, Info) ->
-    dir_1(Path, maybe_binary(Dir), Info).
-dir_1(_Path, <<"/", _/binary>> = Dir0, Info) ->
-    Dir = <<Dir0/binary, "/">>,
-    case filelib:ensure_dir(Dir) of
-        ok ->
-            write_file_info(Dir, Info);
-        Error ->
-            Error
-    end;
-dir_1(Path, Dir0, Info) ->
-    Dir = <<Path/binary, "/", Dir0/binary, "/">>,
-    case filelib:ensure_dir(Dir) of
+-spec dir(binary(), file:filename_all() | {file:filename_all(), filemode()}) -> 'ok' | {'error', file:posix()}.
+dir(Path, Dir) when is_binary(Dir); is_list(Dir) ->
+    dir(Path, {Dir, undefined});
+dir(Path, {Dir0, Info}) ->
+    Dir = filename:absname_join(Path, Dir0),
+    case filelib:ensure_dir(<<Dir/binary, "/">>) of
         ok ->
             write_file_info(Dir, Info);
         Error ->
             Error
     end.
 
--spec copy(binary(), file:filename_all(), file:filename_all()) -> 'ok' | {'error', file:posix()}.
--spec copy(binary(), file:filename_all(), file:filename_all(), filemode()) -> 'ok' | {'error', file:posix()}.
-copy(Path, Source, Destination) ->
-    copy(Path, Source, Destination, undefined).
-copy(Path, Source, Destination, Info) ->
-    copy_1(Path, maybe_binary(Source), maybe_binary(Destination), Info).
-copy_1(_Path, Source, <<"/",_/binary>> = Destination, Info) ->
-    case file:copy(Source, Destination) of
-        {ok, _} ->
-            write_file_info(Destination, Info);
-        Error ->
-            Error
-    end;
-copy_1(Path, Source, Destination0, Info) ->
-    Destination = <<Path/binary, "/", Destination0/binary>>,
+-spec copy(binary(), {file:filename_all(), file:filename_all()} |
+    {file:filename_all(), file:filename_all(), filemode()}) ->
+    'ok' | {'error', file:posix()}.
+copy(Path, {Source, Destination}) ->
+    copy(Path, {Source, Destination, undefined});
+copy(Path, {Source, Destination0, Info}) ->
+    Destination = filename:absname_join(Path, Destination0),
     case file:copy(Source, Destination) of
         {ok, _} ->
             write_file_info(Destination, Info);
@@ -325,21 +282,14 @@ copy_1(Path, Source, Destination0, Info) ->
             Error
     end.
 
--spec file(binary(), file:filename_all(), iodata()) -> 'ok' | {'error', file:posix()}.
--spec file(binary(), file:filename_all(), iodata(), filemode()) -> 'ok' | {'error', file:posix()}.
-file(Path, File, Content) ->
-    file(Path, File, Content, undefined).
-file(Path, File, Content, Info) ->
-    file_1(Path, maybe_binary(File), Content, Info).
-file_1(_Path, <<"/", _/binary>> = File, Content, Info) ->
-    case file:write_file(File, Content) of
-        ok ->
-            write_file_info(File, Info);
-        Error ->
-            Error
-    end;
-file_1(Path, File0, Content, Info) ->
-    File = <<Path/binary, "/", File0/binary>>,
+-spec file(binary(), {file:filename_all(), iodata()} |
+    {file:filename_all(), iodata(), filemode()}) -> 'ok' | {'error', file:posix()}.
+file(Path, {File, Content}) ->
+    file(Path, {File, Content, undefined});
+file(Path, File) when is_binary(File); is_list(File) ->
+    file(Path, {File, <<>>, undefined});
+file(Path, {File0, Content, Info}) ->
+    File = filename:absname_join(Path, File0),
     case file:write_file(File, Content) of
         ok ->
             write_file_info(File, Info);
@@ -354,3 +304,22 @@ write_file_info(File, #file_info{} = Info) ->
     file:write_file_info(File, Info);
 write_file_info(File, Mode) when is_integer(Mode) ->
     file:write_file_info(File, #file_info{mode = Mode}).
+
+call(Container, Call, Arg) ->
+    case liblxc:call(Container, Call, Arg) of
+        true -> true;
+        false -> err(Call, [Arg], true, false)
+    end.
+
+attempt(Fun, Path, Arg) ->
+    case ?MODULE:Fun(Path, Arg) of
+        ok -> ok;
+        Error -> err(Fun, [Path, Arg], ok, Error)
+    end.
+
+err(Fun, Arg, Expected, Err) ->
+    erlang:error({error, [
+        {Fun, Arg},
+        {expected, Expected},
+        {value, Err}
+    ]}).

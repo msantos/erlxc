@@ -72,7 +72,7 @@ chroot(Container) ->
         ]}
     ],
     Reply = erlxc:chroot(Container, Chroot),
-    ?_assertEqual(ok, Reply).
+    ?_assertEqual(true, Reply).
 
 erlxc_exit(Container) ->
     true = erlxc:exit(Container, kill),
