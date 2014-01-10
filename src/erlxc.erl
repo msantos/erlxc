@@ -35,9 +35,13 @@
         start/2
     ]).
 
--spec spawn() -> #container{}.
--spec spawn(string() | binary()) -> #container{}.
--spec spawn(string() | binary(),proplists:proplist()) -> #container{}.
+-export_type([container/0]).
+
+-type container() :: #container{}.
+
+-spec spawn() -> container().
+-spec spawn(string() | binary()) -> container().
+-spec spawn(string() | binary(),proplists:proplist()) -> container().
 spawn() ->
     erlxc:spawn(<<>>, []).
 spawn(Name) ->
@@ -46,11 +50,11 @@ spawn(Name, Options) ->
     Container = new(Name, Options),
     boot(Container, Options).
 
--spec send(#container{},iodata()) -> 'true'.
+-spec send(container(),iodata()) -> 'true'.
 send(#container{console = Console}, Data) ->
     erlxc_console:send(Console, Data).
 
--spec exit(#container{},'kill' | 'normal') -> boolean().
+-spec exit(container(),'kill' | 'normal') -> boolean().
 exit(#container{port = Port}, normal) ->
     liblxc:shutdown(Port, 0);
 
@@ -81,9 +85,9 @@ console(#container{console = Port}) -> Port.
 %%--------------------------------------------------------------------
 %%% Container configuration
 %%--------------------------------------------------------------------
--spec new() -> #container{}.
--spec new(string() | binary()) -> #container{}.
--spec new(string() | binary(),proplists:proplist()) -> #container{}.
+-spec new() -> container().
+-spec new(string() | binary()) -> container().
+-spec new(string() | binary(),proplists:proplist()) -> container().
 new() ->
     new(<<>>, []).
 new(Name) ->
@@ -94,8 +98,8 @@ new(Name, Options) ->
     Port = erlxc_drv:start(Name, Options ++ [transitory]),
     #container{port = Port}.
 
--spec connect(#container{}) -> #container{}.
--spec connect(#container{}, proplists:proplist()) -> #container{}.
+-spec connect(container()) -> container().
+-spec connect(container(), proplists:proplist()) -> container().
 connect(Container) ->
     connect(Container, []).
 connect(#container{port = Port, console = undefined} = Container, Options) ->
@@ -106,7 +110,7 @@ connect(#container{console = Console0} = Container, Options) ->
     catch erlxc_console:stop(Console0),
     connect(Container#container{console = undefined}, Options).
 
--spec config(#container{}, proplists:proplist()) -> 'ok'.
+-spec config(container(), proplists:proplist()) -> 'ok'.
 config(#container{port = Port}, Options) ->
     Config = proplists:get_value(config, Options, []),
 
@@ -130,7 +134,7 @@ config(#container{port = Port}, Options) ->
     true = liblxc:save_config(Port, liblxc:config_file_name(Port)),
     ok.
 
--spec chroot(#container{}, proplists:proplist()) -> 'ok'.
+-spec chroot(container(), proplists:proplist()) -> 'ok'.
 chroot(#container{port = Port}, Options) ->
     ConfigPath = proplists:get_value(path, Options, liblxc:get_config_path(Port)),
     Chroot = proplists:get_value(chroot, Options, []),
@@ -146,7 +150,7 @@ chroot(#container{port = Port}, Options) ->
     make(copy, Path, Copy, Options),
     make(file, Path, File, Options).
 
--spec create(#container{}, proplists:proplist()) -> 'ok'.
+-spec create(container(), proplists:proplist()) -> 'ok'.
 create(#container{port = Port}, Options) ->
     Create = proplists:get_value(create, Options, []),
 
@@ -160,7 +164,7 @@ create(#container{port = Port}, Options) ->
     true = liblxc:create(Port, Template, Bdevtype, Bdevspec, Flags, Argv),
     ok.
 
--spec start(#container{}, proplists:proplist()) -> 'ok'.
+-spec start(container(), proplists:proplist()) -> 'ok'.
 start(#container{port = Port}, Options) ->
     Start = proplists:get_value(start, Options, []),
     UseInit = proplists:get_value(useinit, Start, false),
