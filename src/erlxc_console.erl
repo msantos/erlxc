@@ -23,8 +23,8 @@
 start(Name) ->
     start(Name, []).
 start(Name, Options) when is_list(Options) ->
-    [Cmd|Argv] = getopts([{name, Name}] ++ Options),
-    open_port({spawn_executable, Cmd}, [{args,Argv},stream,binary]).
+    Cmd = getopts([{name, Name}] ++ Options),
+    open_port({spawn, Cmd}, [stream,binary]).
 
 send(Container, Data) when is_port(Container) ->
     erlang:port_command(Container, Data).
@@ -35,17 +35,15 @@ stop(Port) ->
 %%--------------------------------------------------------------------
 %%% Internal functions
 %%--------------------------------------------------------------------
--spec getopts(proplists:proplist()) -> list(string() | [string()]).
 getopts(Options) when is_list(Options) ->
     Exec = proplists:get_value(exec, Options, "sudo"),
     Progname = proplists:get_value(progname, Options, progname()),
 
     Switches = [ optarg(Opt) || Opt <- proplists:compact(Options) ],
-    [Cmd0|Argv] = [ N || N <- [Exec, Progname|Switches], N /= ""],
+    Cmd0 = [ N || N <- [Exec, Progname|Switches], N /= ""],
+    Cmd = quote(string:join(Cmd0, " ")),
 
-    Cmd = string:join([find_executable(Cmd0)|Argv], " "),
-
-    [find_executable("script"), "-q", "-c", Cmd, "/dev/null"].
+    string:join(["script", "-q", "-c", Cmd, "/dev/null", "2>", "/dev/null"], " ").
 
 optarg({name, Arg})         -> switch("n", Arg);
 optarg({path, Arg})         -> switch("P", Arg);
@@ -58,13 +56,10 @@ switch(Switch, Arg) when is_binary(Arg) ->
 switch(Switch, Arg) ->
     lists:concat(["-", Switch, " ", Arg]).
 
-find_executable(Exe) ->
-    case os:find_executable(Exe) of
-        false ->
-            erlang:error({executable_not_found, Exe});
-        N ->
-            N
-    end.
+quote("") ->
+    "";
+quote(Str) ->
+    "\"" ++ Str ++ "\"".
 
 progname() ->
-    find_executable("lxc-console").
+    os:find_executable("lxc-console").
