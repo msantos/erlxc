@@ -144,7 +144,7 @@ chroot(#container{port = Port}, Options) ->
     File = proplists:get_value(file, Chroot, []),
 
     Name = liblxc:name(Port),
-    Path = <<(maybe_binary(ConfigPath))/binary, "/", Name/binary>>,
+    Path = <<(maybe_binary(ConfigPath))/binary, "/", Name/binary, "/rootfs">>,
 
     make(dir, Path, Dir, Options),
     make(copy, Path, Copy, Options),
