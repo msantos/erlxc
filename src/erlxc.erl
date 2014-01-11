@@ -124,6 +124,9 @@ config(#container{port = Port}, Options) ->
             (<<>>) ->
                 verbose(1, {clear_config, [Port]}, Options),
                 call(Port, clear_config, []);
+            ({load, File}) ->
+                verbose(1, {load_config, [Port]}, Options),
+                call(Port, load_config, [File]);
             ({Key, Value}) ->
                 verbose(1, {set_config_item, [Port, Key, Value]}, Options),
                 call(Port, set_config_item, [Key, Value]);
