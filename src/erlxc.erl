@@ -187,7 +187,8 @@ boot(#container{port = Port} = Container, Options) ->
 state(#container{port = Port} = Container, Options) ->
     state(Container, liblxc:defined(Port), Options).
 state(#container{port = Port} = Container, false, Options) ->
-    case erlxc_drv:event(Port, infinity) of
+    Timeout = proplists:get_value(timeout, Options, infinity),
+    case erlxc_drv:event(Port, Timeout) of
         {state, <<"STOPPED">>} ->
             chroot(Container, Options),
             create(Container, Options),
@@ -198,7 +199,8 @@ state(#container{port = Port} = Container, false, Options) ->
             erlang:error({error, State})
     end;
 state(#container{port = Port} = Container, true, Options) ->
-    case erlxc_drv:event(Port, infinity) of
+    Timeout = proplists:get_value(timeout, Options, infinity),
+    case erlxc_drv:event(Port, Timeout) of
         {state, <<"RUNNING">>} ->
             call(Port, async_state_close, []),
             connect(Container, Options);
