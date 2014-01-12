@@ -115,10 +115,23 @@ connect(#container{console = Console0} = Container, Options) ->
 config(#container{port = Port}, Options) ->
     Config = proplists:get_value(config, Options, []),
 
+    Name = liblxc:name(Port),
+    Path = liblxc:get_config_path(Port),
+
+    Rootfs = case liblxc:get_config_item(Port, "lxc.rootfs") of
+        false ->
+            <<Path/binary, "/", Name/binary, "/rootfs">>;
+        N ->
+            N
+    end,
+
     verbose(1, {path, [
-                liblxc:get_config_path(Port),
-                liblxc:config_file_name(Port)
+                Path,
+                liblxc:config_file_name(Port),
+                Rootfs
             ]}, Options),
+
+    call(Port, set_config_item, ["lxc.rootfs", Rootfs]),
 
     lists:foreach(fun
             (<<>>) ->
