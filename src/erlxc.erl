@@ -193,8 +193,13 @@ state(#container{port = Port} = Container, false, Options) ->
     Timeout = proplists:get_value(timeout, Options, infinity),
     case erlxc_drv:event(Port, Timeout) of
         {state, <<"STOPPED">>} ->
-            chroot(Container, Options),
-            create(Container, Options),
+            Chroot = proplists:is_defined(chroot, Options),
+            case Chroot of
+                true ->
+                    chroot(Container, Options);
+                false ->
+                    create(Container, Options)
+            end,
             config(Container, Options),
             start(Container, Options),
             state(Container, Options);
