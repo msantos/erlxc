@@ -131,6 +131,7 @@ config(#container{port = Port}, Options) ->
                 Rootfs
             ]}, Options),
 
+    call(Port, set_config_item, ["lxc.utsname", Name]),
     call(Port, set_config_item, ["lxc.rootfs", Rootfs]),
 
     lists:foreach(fun
