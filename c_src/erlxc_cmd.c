@@ -137,9 +137,6 @@ erlxc_lxc_container_create(erlxc_state_t *ep, ETERM *arg)
     if (erl_iolist_length(hd) > 0)
         t = erl_iolist_to_string(hd);
 
-    if (!t)
-        goto BADARG;
-
     /* bdevtype */
     arg = erlxc_list_head(&hd, arg);
     if (!hd || !ERLXC_IS_IOLIST(hd))
