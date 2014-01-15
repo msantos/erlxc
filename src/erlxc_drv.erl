@@ -73,6 +73,7 @@ getopts(Options) when is_list(Options) ->
                     (temporary) -> {type, temporary};
                     (nodaemonize) -> {daemonize, false};
                     (nocloseallfds) -> {closeallfds, false};
+                    (verbose) -> {verbose, 1};
                     (N) when is_atom(N) -> {N, true};
                     ({_,_} = N) -> N
                 end, Options),
