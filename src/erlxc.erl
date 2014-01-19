@@ -141,8 +141,6 @@ config(#container{port = Port}, Options) ->
             ({load, File}) ->
                 verbose(1, {load_config, [Port]}, Options),
                 call(Port, load_config, [File]);
-            ({cgroup, _Key, _Value}) ->
-                ok;
             ({Key, Value}) ->
                 verbose(1, {set_config_item, [Port, Key, Value]}, Options),
                 call(Port, set_config_item, [Key, Value]);
@@ -155,15 +153,15 @@ config(#container{port = Port}, Options) ->
 
 -spec cgroup(container(), proplists:proplist()) -> 'true'.
 cgroup(#container{port = Port}, Options) ->
-    Config = proplists:get_value(config, Options, []),
+    Cgroup = proplists:get_value(cgroup, Options, []),
 
     lists:foreach(fun
-            ({cgroup, Key, Value}) ->
+            ({Key, Value}) ->
                 verbose(1, {set_cgroup_item, [Port, Key, Value]}, Options),
                 call(Port, set_cgroup_item, [Key, Value]);
             (_) ->
                 ok
-        end, Config),
+        end, Cgroup),
 
     true.
 
