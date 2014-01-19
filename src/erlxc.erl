@@ -141,6 +141,8 @@ config(#container{port = Port}, Options) ->
             ({load, File}) ->
                 verbose(1, {load_config, [Port]}, Options),
                 call(Port, load_config, [File]);
+            ({cgroup, _Key, _Value}) ->
+                ok;
             ({Key, Value}) ->
                 verbose(1, {set_config_item, [Port, Key, Value]}, Options),
                 call(Port, set_config_item, [Key, Value]);
@@ -150,6 +152,20 @@ config(#container{port = Port}, Options) ->
         end, Config),
 
     call(Port, save_config, [liblxc:config_file_name(Port)]).
+
+-spec cgroup(container(), proplists:proplist()) -> 'true'.
+cgroup(#container{port = Port}, Options) ->
+    Config = proplists:get_value(config, Options, []),
+
+    lists:foreach(fun
+            ({cgroup, Key, Value}) ->
+                verbose(1, {set_cgroup_item, [Port, Key, Value]}, Options),
+                call(Port, set_cgroup_item, [Key, Value]);
+            (_) ->
+                ok
+        end, Config),
+
+    true.
 
 -spec chroot(container(), proplists:proplist()) -> 'true'.
 chroot(#container{port = Port}, Options) ->
@@ -225,6 +241,7 @@ state(#container{port = Port} = Container, true, Options) ->
     case erlxc_drv:event(Port, Timeout) of
         {state, <<"RUNNING">>} ->
             call(Port, async_state_close, []),
+            cgroup(Container, Options),
             connect(Container, Options);
         {state, <<"STOPPED">>} ->
             config(Container, Options),
