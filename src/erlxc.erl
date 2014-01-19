@@ -332,7 +332,7 @@ write_file_info(File, Mode) when is_integer(Mode) ->
 call(Container, Call, Arg) ->
     case liblxc:call(Container, Call, Arg) of
         true -> true;
-        false -> err(Call, [Arg], true, false)
+        false -> err(Call, Arg, true, false)
     end.
 
 attempt(Fun, Path, Arg) ->
