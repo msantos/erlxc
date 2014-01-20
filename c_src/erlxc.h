@@ -65,7 +65,6 @@ ETERM *erlxc_tuple2(ETERM *, ETERM *);
 ETERM *erlxc_tuple3(ETERM *, ETERM *, ETERM *);
 ETERM *erlxc_error(const char *);
 ETERM *erlxc_ok(ETERM *);
-ETERM *erlxc_errno(int);
 ETERM *erlxc_bool(bool);
 ETERM *erlxc_bin(const char *);
 

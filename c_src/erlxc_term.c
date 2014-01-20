@@ -31,12 +31,6 @@ erlxc_tuple3(ETERM *t1, ETERM *t2, ETERM *t3)
 }
 
     ETERM *
-erlxc_errno(int errnum)
-{
-    return erlxc_error(erl_errno_id(errnum));
-}
-
-    ETERM *
 erlxc_error(const char *reason)
 {
     return erlxc_tuple2(erl_mk_atom("error"), erl_mk_atom(reason));
