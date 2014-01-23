@@ -60,6 +60,43 @@ erlxc_lxc_container_name(erlxc_state_t *ep, ETERM *arg)
 }
 
     static ETERM *
+erlxc_lxc_container_rename(erlxc_state_t *ep, ETERM *arg)
+{
+    ETERM *hd = NULL;
+    struct lxc_container *c = ep->c;
+    char *newname = NULL;
+    bool res;
+
+    /* name */
+    arg = erlxc_list_head(&hd, arg);
+    if (!hd || !ERLXC_IS_IOLIST(hd))
+        goto BADARG;
+
+    if (erl_iolist_length(hd) > 0)
+        newname = erl_iolist_to_string(hd);
+
+    if (!newname)
+        goto BADARG;
+
+    res = c->rename(c, newname);
+
+    if (res) {
+        ep->c = lxc_container_new(newname, c->get_config_path(c));
+        if (!ep->c)
+            erl_err_quit("failed to create container");
+
+        (void)lxc_container_put(c);
+    }
+
+    erl_free(newname);
+
+    return erlxc_bool(res);
+
+BADARG:
+    return erl_mk_atom("badarg");
+}
+
+    static ETERM *
 erlxc_lxc_container_state(erlxc_state_t *ep, ETERM *arg)
 {
     return erlxc_bin(ep->c->state(ep->c));
