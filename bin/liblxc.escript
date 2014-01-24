@@ -204,7 +204,12 @@ call(Container, Command) ->
 static({call,3}) ->
 "
 call(Container, Command, Arg) when is_port(Container), is_list(Arg) ->
-    erlxc_drv:call(Container, erlxc_drv:encode(command(Command), Arg)).
+    case erlxc_drv:call(Container, erlxc_drv:encode(command(Command), Arg)) of
+        badarg ->
+            erlang:error(badarg, [Container, Command, Arg]);
+        Reply ->
+            Reply
+    end.
 ".
 
 %includes(Header) ->

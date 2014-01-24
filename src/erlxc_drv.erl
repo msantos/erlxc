@@ -27,16 +27,12 @@ start(Name, Options) ->
     [Cmd|Argv] = getopts([{name, Name}] ++ Options),
     open_port({spawn_executable, Cmd}, [{args, Argv}, {packet, 2}, binary]).
 
--spec call(port(),binary()) -> 'permanent' | 'transient' | 'temporary' | boolean() | iodata() | integer().
+-spec call(port(),binary()) -> 'badarg' | 'permanent' | 'transient' | 'temporary' | boolean() | iodata() | integer().
 call(Port, Data) when is_port(Port), is_binary(Data), byte_size(Data) < 16#ffff ->
     true = erlang:port_command(Port, Data),
-    Reply = receive
+    receive
         {Port, {data, <<?ERLXC_MSG_SYNC, Msg/binary>>}} ->
             binary_to_term(Msg)
-    end,
-    case Reply of
-        badarg -> erlang:error(badarg);
-        _ -> Reply
     end.
 
 -spec event(port()) -> {state, binary()}.
