@@ -288,10 +288,14 @@ maybe_binary(N) when is_binary(N) -> N.
 -spec make('dir' | 'copy' | 'file', binary(), [file:filename_all() | tuple()], proplists:proplist()) -> 'ok'.
 make(_Type, _Path, [], _Options) ->
     ok;
-make(Type, Path, [Obj|Rest], Options) when Type =:= dir; Type =:= copy; Type =:= file ->
+make(Type, Path, [Obj|Rest] = Files, Options) when Type =:= dir; Type =:= copy; Type =:= file ->
     verbose(1, {Type, [Path, Obj]}, Options),
-    attempt(Type, Path, Obj),
-    make(Type, Path, Rest, Options).
+    case ?MODULE:Type(Path, Obj) of
+        ok ->
+            make(Type, Path, Rest, Options);
+        Error ->
+            erlang:error({case_clause, Error}, [Type, Path, Files, Options])
+    end.
 
 -type filemode() :: file:filename_all() | integer() | 'undefined'.
 
@@ -346,19 +350,8 @@ write_file_info(File, Mode) when is_integer(Mode) ->
 
 call(Container, Call, Arg) ->
     case liblxc:call(Container, Call, Arg) of
-        true -> true;
-        false -> err(Call, Arg, true, false)
+        true ->
+            true;
+        false ->
+            erlang:error({case_clause, false}, [Container, Call, Arg])
     end.
-
-attempt(Fun, Path, Arg) ->
-    case ?MODULE:Fun(Path, Arg) of
-        ok -> ok;
-        Error -> err(Fun, [Path, Arg], ok, Error)
-    end.
-
-err(Fun, Arg, Expected, Err) ->
-    erlang:error({error, [
-        {Fun, Arg},
-        {expected, Expected},
-        {value, Err}
-    ]}).
