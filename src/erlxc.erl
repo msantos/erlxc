@@ -230,9 +230,7 @@ state(#container{port = Port} = Container, false, Options) ->
             end,
             config(Container, Options),
             start(Container, Options),
-            state(Container, Options);
-        {state, State} ->
-            erlang:error({error, State})
+            state(Container, Options)
     end;
 state(#container{port = Port} = Container, true, Options) ->
     Timeout = proplists:get_value(timeout, Options, infinity),
@@ -250,9 +248,7 @@ state(#container{port = Port} = Container, true, Options) ->
             state(Container, true, Options);
         {state, State} when State =:= <<"STARTING">>; State =:= <<"STOPPING">>;
                 State =:= <<"FREEZING">>; State =:= <<"THAWED">> ->
-            state(Container, Options);
-        {state, State} ->
-            erlang:error({unsupported, State, Options})
+            state(Container, Options)
     end.
 
 %%--------------------------------------------------------------------
