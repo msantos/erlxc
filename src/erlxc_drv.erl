@@ -102,7 +102,7 @@ switch(Switch, Arg) ->
 find_executable(Exe) ->
     case os:find_executable(Exe) of
         false ->
-            erlang:error({executable_not_found, Exe});
+            erlang:error(badarg, [Exe]);
         N ->
             N
     end.
