@@ -131,12 +131,11 @@ name(Container) ->
     ?_assertMatch(<<"liblxc", _/binary>>, Reply).
 
 rename(Container) ->
-    Name = liblxc:name(Container),
     N = binary:decode_unsigned(crypto:rand_bytes(1)),
     NewName = <<"rename", (i2b(N))/binary>>,
     true = liblxc:rename(Container, NewName),
-    Reply = liblxc:name(Container),
-    ?_assertMatch(NewName, Reply).
+    Name = liblxc:name(Container),
+    ?_assertMatch(NewName, Name).
 
 config_file_name(Container) ->
     Name = liblxc:name(Container),
