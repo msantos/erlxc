@@ -36,13 +36,55 @@
     ]).
 -export([dir/2, copy/2, file/2]).
 
--export_type([container/0]).
+-export_type([container/0,options/0]).
 
 -type container() :: #container{}.
 
+-type config_options() :: {'config', [
+    <<>> |
+    {'load', file:filename_all()} |
+    {iodata(), iodata()} |
+    iodata()
+]}.
+
+-type cgroup_options() :: {'cgroup', [
+    {iodata(), iodata()}
+]}.
+
+-type chroot_options() :: {'chroot', [
+    {'dir', list(file:filename_all())} |
+    {'copy', list(file:filename_all())} |
+    {'file', list(file:filename_all())}
+]}.
+
+-type create_options() :: {'create', [
+    {'template', iodata()} |
+    {'bdevtype', iodata()} |
+    {'bdevspec', iodata()} |
+    {'flags', non_neg_integer()} |
+    {'argv', list(iodata())}
+]}.
+
+-type start_options() :: {'start', [
+    {'useinit', 'true' | 'false' | 0 | 1} |
+    {'argv', list(iodata())}
+]}.
+
+-type options() :: [
+    {'path', iodata()} |
+    {'timeout', non_neg_integer() | 'infinity'} |
+    {'verbose', non_neg_integer()} |
+    config_options() |
+    cgroup_options() |
+    chroot_options() |
+    create_options() |
+    start_options() |
+    erlxc_drv:type()
+].
+
 -spec spawn() -> container().
 -spec spawn(string() | binary()) -> container().
--spec spawn(string() | binary(),proplists:proplist()) -> container().
+-spec spawn(string() | binary(),options()) -> container().
 spawn() ->
     erlxc:spawn(<<>>, []).
 spawn(Name) ->
@@ -65,6 +107,7 @@ exit(#container{port = Port}, kill) ->
 type(#container{port = Port}) ->
     liblxc:type(Port).
 
+-spec type(container(), erlxc_drv:type()) -> 'true'.
 type(Container, Type) when
     Type =:= temporary;
     Type =:= transient;
@@ -88,7 +131,7 @@ console(#container{console = Port}) -> Port.
 %%--------------------------------------------------------------------
 -spec new() -> container().
 -spec new(string() | binary()) -> container().
--spec new(string() | binary(),proplists:proplist()) -> container().
+-spec new(string() | binary(),options()) -> container().
 new() ->
     new(<<>>, []).
 new(Name) ->
@@ -100,7 +143,7 @@ new(Name, Options) ->
     #container{port = Port}.
 
 -spec connect(container()) -> container().
--spec connect(container(), proplists:proplist()) -> container().
+-spec connect(container(), options()) -> container().
 connect(Container) ->
     connect(Container, []).
 connect(#container{port = Port, console = undefined} = Container, Options) ->
@@ -111,7 +154,7 @@ connect(#container{console = Console0} = Container, Options) ->
     catch erlxc_console:stop(Console0),
     connect(Container#container{console = undefined}, Options).
 
--spec config(container(), proplists:proplist()) -> 'true'.
+-spec config(container(), options()) -> 'true'.
 config(#container{port = Port}, Options) ->
     Config = proplists:get_value(config, Options, []),
 
@@ -151,21 +194,19 @@ config(#container{port = Port}, Options) ->
 
     call(Port, save_config, [liblxc:config_file_name(Port)]).
 
--spec cgroup(container(), proplists:proplist()) -> 'true'.
+-spec cgroup(container(), options()) -> 'true'.
 cgroup(#container{port = Port}, Options) ->
     Cgroup = proplists:get_value(cgroup, Options, []),
 
     lists:foreach(fun
             ({Key, Value}) ->
                 verbose(1, {set_cgroup_item, [Port, Key, Value]}, Options),
-                call(Port, set_cgroup_item, [Key, Value]);
-            (_) ->
-                ok
+                call(Port, set_cgroup_item, [Key, Value])
         end, Cgroup),
 
     true.
 
--spec chroot(container(), proplists:proplist()) -> 'true'.
+-spec chroot(container(), options()) -> 'true'.
 chroot(#container{port = Port}, Options) ->
     ConfigPath = proplists:get_value(path, Options, liblxc:get_config_path(Port)),
     Chroot = proplists:get_value(chroot, Options, []),
@@ -183,7 +224,7 @@ chroot(#container{port = Port}, Options) ->
 
     true.
 
--spec create(container(), proplists:proplist()) -> 'true'.
+-spec create(container(), options()) -> 'true'.
 create(#container{port = Port}, Options) ->
     Create = proplists:get_value(create, Options, []),
 
@@ -196,7 +237,7 @@ create(#container{port = Port}, Options) ->
     verbose(1, {create, [Port, Template, Bdevtype, Bdevspec, Flags, Argv]}, Options),
     call(Port, create, [Template, Bdevtype, Bdevspec, Flags, Argv]).
 
--spec start(container(), proplists:proplist()) -> 'true'.
+-spec start(container(), options()) -> 'true'.
 start(#container{port = Port}, Options) ->
     Start = proplists:get_value(start, Options, []),
     UseInit = proplists:get_value(useinit, Start, false),

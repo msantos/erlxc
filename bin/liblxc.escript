@@ -241,6 +241,7 @@ specs() ->
 -spec name(port()) -> binary().
 -spec permanent(port()) -> boolean().
 -spec reboot(port()) -> boolean().
+-spec rename(port(),iodata()) -> boolean().
 -spec running(port()) -> boolean().
 -spec save_config(port(), iodata()) -> boolean().
 -spec set_config_item(port(), iodata(), iodata()) -> boolean().
@@ -252,7 +253,7 @@ specs() ->
 -spec stop(port()) -> boolean().
 -spec temporary(port()) -> boolean().
 -spec transient(port()) -> boolean().
--spec type(port()) -> 'permanent' | 'transient' | 'temporary'.
+-spec type(port()) -> erlxc_drv:type().
 -spec unfreeze(port()) -> boolean().
 -spec wait(port(), iodata(), integer()) -> boolean().
 -spec test_argv(port(), [binary()]) -> [binary()].

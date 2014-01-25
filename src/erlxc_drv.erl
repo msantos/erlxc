@@ -19,6 +19,10 @@
 -export([call/2, encode/2, event/1, event/2]).
 -export([getopts/1]).
 
+-export_type([type/0]).
+
+-type type() :: 'temporary' | 'transient' | 'permanent'.
+
 -spec start(nonempty_string() | binary()) -> port().
 -spec start(nonempty_string() | binary(),proplists:proplist()) -> port().
 start(Name) ->
@@ -27,7 +31,7 @@ start(Name, Options) ->
     [Cmd|Argv] = getopts([{name, Name}] ++ Options),
     open_port({spawn_executable, Cmd}, [{args, Argv}, {packet, 2}, binary]).
 
--spec call(port(),binary()) -> 'badarg' | 'permanent' | 'transient' | 'temporary' | boolean() | iodata() | integer().
+-spec call(port(),binary()) -> 'badarg' | type() | boolean() | iodata() | integer().
 call(Port, Data) when is_port(Port), is_binary(Data), byte_size(Data) < 16#ffff ->
     true = erlang:port_command(Port, Data),
     receive
