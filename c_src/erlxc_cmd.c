@@ -67,6 +67,10 @@ erlxc_lxc_container_rename(erlxc_state_t *ep, ETERM *arg)
     char *newname = NULL;
     bool res;
 
+    /* Disallow renaming a container if the state is being monitored */
+    if (ep->statefd != -1)
+        return erlxc_bool(false);
+
     /* name */
     arg = erlxc_list_head(&hd, arg);
     if (!hd || !ERLXC_IS_IOLIST(hd))
