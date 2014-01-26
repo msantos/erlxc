@@ -1,9 +1,41 @@
 The goal of erlxc is to be a simple, safe interface to Linux containers
 from Erlang.
 
-Status: under development, unstable
+Status:
 
-# High Level API
+* the liblxc binding is mostly stable
+
+* the erlxc module is unstable
+
+Build Instructions
+------------------
+
+erlxc currently requires using liblxc 1.0.0:
+```
+git clone https://github.com/lxc/lxc.git
+cd lxc
+./autogen.sh && ./configure && make && sudo make install
+```
+
+You may need to adjust the LXC defaults, for example, to match the
+bridge device.
+```
+vi /usr/local/etc/lxc/default.conf
+```
+
+Set these environment variables to indicate the path to the liblxc
+install and build:
+```
+export ERLXC_LDFLAGS="-L /usr/local/lib"
+export ERLXC_CFLAGS="-I /usr/local/include"
+
+git clone https://github.com/msantos/erlxc.git
+cd erlxc
+make
+```
+
+High Level API
+--------------
 
 The high level API models the container as an Erlang process.
 
@@ -34,7 +66,8 @@ The high level API models the container as an Erlang process.
 
         Send data to the container's console.
 
-## Examples
+Examples
+========
 
 * tcpvm
 
@@ -100,7 +133,8 @@ shell(Socket, #container{console = Console} = Container) ->
     end.
 ```
 
-# Low Level API
+Low Level API
+-------------
 
 The low level API mirrors the liblxc API;
 
@@ -289,7 +323,8 @@ NULL values are represented by the empty binary (<<>>).
         Blocks until the container state equals the value specified in
         State. Set Timeout to 0 to return immediately.
 
-## Examples
+Examples
+========
 
 * Create an Ubuntu 12.04 container
 
@@ -307,7 +342,7 @@ define(Name) ->
     define(Name, <<"lxcbr0">>).
 
 define(Name, Bridge) ->
-    {ok, Container} = erlxc_drv:start([{name, Name}]),
+    Container = erlxc_drv:start([{name, Name}]),
     liblxc:set_config_item(Container, <<"lxc.network.type">>, <<"veth">>),
     liblxc:set_config_item(Container, <<"lxc.network.link">>, Bridge),
     liblxc:set_config_item(Container, <<"lxc.network.flags">>, <<"up">>),
@@ -317,7 +352,7 @@ create(Container) ->
     liblxc:create(Container, <<"ubuntu">>, <<>>, <<>>, 0, [<<"-r">>, <<"precise">>]).
 
 start(Container) ->
-    liblxc:start(Container).
+    liblxc:start(Container, 0, []).
 
 shutdown(Container) ->
     liblxc:shutdown(Container, 0).
@@ -326,7 +361,8 @@ destroy(Container) ->
     liblxc:destroy(Container).
 ```
 
-# Alternatives
+Alternatives
+------------
 
 * verx provides an interface to libvirt, which has support for Linux
   containers
@@ -336,3 +372,12 @@ https://github.com/msantos/verx
 * islet is a high level interface for Linux containers using libvirt
 
 https://github.com/msantos/islet
+
+TODO
+----
+
+* generate C/Erlang bindings from typespecs
+
+* generate liblxc documentation
+
+* port to Ubuntu 12.04 (liblxc 0.7.5)
