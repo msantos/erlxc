@@ -224,23 +224,23 @@ call(Container, Command, Arg) when is_port(Container), is_list(Arg) ->
 % FIXME hack for hard coding typespecs
 specs() ->
 "
--spec list_active_containers(port(), iodata()) -> [binary()].
--spec list_all_containers(port(), iodata()) -> [binary()].
--spec list_defined_containers(port(), iodata()) -> [binary()].
--spec clear_config(port()) -> 'true'.
 -spec clear_config_item(port(), iodata()) -> boolean().
+-spec clear_config(port()) -> 'true'.
 -spec config_file_name(port()) -> binary().
 -spec create(port(), iodata(), iodata(), iodata(), integer(), [binary()]) -> boolean().
 -spec defined(port()) -> boolean().
 -spec destroy(port()) -> boolean().
 -spec freeze(port()) -> boolean().
--spec get_config_item(port(), iodata())  -> binary() | 'false'.
 -spec get_cgroup_item(port(), iodata())  -> binary() | 'false'.
+-spec get_config_item(port(), iodata())  -> binary() | 'false'.
 -spec get_config_path(port()) -> binary().
 -spec get_interfaces(port()) -> [binary()].
 -spec get_ips(port(), iodata(), iodata(), integer()) -> [binary()].
 -spec get_keys(port(), iodata()) -> binary().
 -spec init_pid(port()) -> integer().
+-spec list_active_containers(port(), iodata()) -> [binary()].
+-spec list_all_containers(port(), iodata()) -> [binary()].
+-spec list_defined_containers(port(), iodata()) -> [binary()].
 -spec load_config(port(), iodata()) -> boolean().
 -spec name(port()) -> binary().
 -spec permanent(port()) -> boolean().
@@ -248,18 +248,18 @@ specs() ->
 -spec rename(port(),iodata()) -> boolean().
 -spec running(port()) -> boolean().
 -spec save_config(port(), iodata()) -> boolean().
--spec set_config_item(port(), iodata(), iodata()) -> boolean().
 -spec set_cgroup_item(port(), iodata(), iodata()) -> boolean().
+-spec set_config_item(port(), iodata(), iodata()) -> boolean().
 -spec set_config_path(port(), iodata()) -> boolean().
 -spec shutdown(port(), non_neg_integer()) -> boolean().
 -spec start(port(), 0 | 1, [binary()]) -> boolean().
 -spec state(port()) -> binary().
 -spec stop(port()) -> boolean().
 -spec temporary(port()) -> boolean().
+-spec test_argv(port(), [binary()]) -> [binary()].
 -spec transient(port()) -> boolean().
 -spec type(port()) -> erlxc_drv:type().
 -spec unfreeze(port()) -> boolean().
--spec wait(port(), iodata(), integer()) -> boolean().
--spec test_argv(port(), [binary()]) -> [binary()].
 -spec version(port()) -> binary().
+-spec wait(port(), iodata(), integer()) -> boolean().
 ".
