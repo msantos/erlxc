@@ -104,8 +104,14 @@ mkerl(File, Proto) ->
                 Functions
             ]))),
 
-    Code1 = re:replace(Code0, "%%__STATIC__%%", static()),
-    Code = re:replace(Code1, "%%__SPECS__%%", specs()),
+    Code = lists:foldl(fun({Marker, Generated}, Text) ->
+                re:replace(Text, Marker, Generated)
+        end,
+        Code0,
+        [
+            {"%%__STATIC__%%", static()},
+            {"%%__SPECS__%%", specs()}
+        ]),
 
 %    io:format("~s~n", [Code]).
     file:write_file(File, [Code]).
