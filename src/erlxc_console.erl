@@ -19,9 +19,9 @@
 -export([getopts/1]).
 
 -spec start(nonempty_string() | binary()) -> port().
--spec start(nonempty_string() | binary(),proplists:proplist()) -> port().
 start(Name) ->
     start(Name, []).
+-spec start(nonempty_string() | binary(),proplists:proplist()) -> port().
 start(Name, Options) when is_list(Options) ->
     Cmd = getopts([{name, Name}] ++ Options),
     open_port({spawn, Cmd}, [stream,binary]).

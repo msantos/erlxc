@@ -24,9 +24,10 @@
 -type type() :: 'temporary' | 'transient' | 'permanent'.
 
 -spec start(nonempty_string() | binary()) -> port().
--spec start(nonempty_string() | binary(),proplists:proplist()) -> port().
 start(Name) ->
     start(Name, []).
+
+-spec start(nonempty_string() | binary(),proplists:proplist()) -> port().
 start(Name, Options) ->
     [Cmd|Argv] = getopts([{name, Name}] ++ Options),
     open_port({spawn_executable, Cmd}, [{args, Argv}, {packet, 2}, binary]).
@@ -40,9 +41,10 @@ call(Port, Data) when is_port(Port), is_binary(Data), byte_size(Data) < 16#ffff 
     end.
 
 -spec event(port()) -> {state, binary()}.
--spec event(port(), non_neg_integer() | 'infinity') -> {state, binary()}.
 event(Port) when is_port(Port) ->
     event(Port, 0).
+
+-spec event(port(), non_neg_integer() | 'infinity') -> {state, binary()}.
 event(Port, Timeout) when is_port(Port) ->
     receive
         {Port, {data, <<?ERLXC_MSG_ASYNC, Msg/binary>>}} ->

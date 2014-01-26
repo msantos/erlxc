@@ -83,12 +83,14 @@
 ].
 
 -spec spawn() -> container().
--spec spawn(string() | binary()) -> container().
--spec spawn(string() | binary(),options()) -> container().
 spawn() ->
     erlxc:spawn(<<>>, []).
+
+-spec spawn(string() | binary()) -> container().
 spawn(Name) ->
     erlxc:spawn(Name, []).
+
+-spec spawn(string() | binary(),options()) -> container().
 spawn(Name, Options) ->
     Container = new(Name, Options),
     boot(Container, Options).
@@ -130,12 +132,14 @@ console(#container{console = Port}) -> Port.
 %%% Container configuration
 %%--------------------------------------------------------------------
 -spec new() -> container().
--spec new(string() | binary()) -> container().
--spec new(string() | binary(),options()) -> container().
 new() ->
     new(<<>>, []).
+
+-spec new(string() | binary()) -> container().
 new(Name) ->
     new(Name, []).
+
+-spec new(string() | binary(),options()) -> container().
 new(<<>>, Options) ->
     new(name(<<"erlxc">>), Options ++ [temporary]);
 new(Name, Options) ->
@@ -143,9 +147,10 @@ new(Name, Options) ->
     #container{port = Port}.
 
 -spec connect(container()) -> container().
--spec connect(container(), options()) -> container().
 connect(Container) ->
     connect(Container, []).
+
+-spec connect(container(), options()) -> container().
 connect(#container{port = Port, console = undefined} = Container, Options) ->
     Name = liblxc:name(Port),
     Console = erlxc_console:start(Name, Options),
