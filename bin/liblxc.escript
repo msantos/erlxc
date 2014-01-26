@@ -218,8 +218,6 @@ call(Container, Command, Arg) when is_port(Container), is_list(Arg) ->
 % FIXME hack for hard coding typespecs
 specs() ->
 "
--spec async_state_notify(port(), non_neg_integer()) -> boolean().
--spec async_state_close(port()) -> boolean().
 -spec list_active_containers(port(), iodata()) -> [binary()].
 -spec list_all_containers(port(), iodata()) -> [binary()].
 -spec list_defined_containers(port(), iodata()) -> [binary()].

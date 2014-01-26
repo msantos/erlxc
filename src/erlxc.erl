@@ -252,45 +252,35 @@ start(#container{port = Port}, Options) ->
 
 % "STOPPED", "STARTING", "RUNNING", "STOPPING",
 % "ABORTING", "FREEZING", "FROZEN", "THAWED",
-boot(#container{port = Port} = Container, Options) ->
-    call(Port, async_state_notify, [5]),
+boot(Container, Options) ->
     state(Container, Options).
 
 state(#container{port = Port} = Container, Options) ->
-    state(Container, liblxc:defined(Port), Options).
-state(#container{port = Port} = Container, false, Options) ->
-    Timeout = proplists:get_value(timeout, Options, infinity),
-    case erlxc_drv:event(Port, Timeout) of
-        {state, <<"STOPPED">>} ->
-            Chroot = proplists:is_defined(chroot, Options),
-            case Chroot of
-                true ->
-                    chroot(Container, Options);
-                false ->
-                    create(Container, Options)
-            end,
-            config(Container, Options),
-            start(Container, Options),
-            state(Container, Options)
-    end;
-state(#container{port = Port} = Container, true, Options) ->
-    Timeout = proplists:get_value(timeout, Options, infinity),
-    case erlxc_drv:event(Port, Timeout) of
-        {state, <<"RUNNING">>} ->
-            call(Port, async_state_close, []),
-            cgroup(Container, Options),
-            connect(Container, Options);
-        {state, <<"STOPPED">>} ->
-            config(Container, Options),
-            start(Container, Options),
-            state(Container, Options);
-        {state, <<"FROZEN">>} ->
-            call(Port, unfreeze, []),
-            state(Container, true, Options);
-        {state, State} when State =:= <<"STARTING">>; State =:= <<"STOPPING">>;
-                State =:= <<"FREEZING">>; State =:= <<"THAWED">> ->
-            state(Container, Options)
-    end.
+    state(Container, liblxc:state(Port), liblxc:defined(Port), Options).
+state(Container, <<"STOPPED">>, false, Options) ->
+    Chroot = proplists:is_defined(chroot, Options),
+    case Chroot of
+        true ->
+            chroot(Container, Options);
+        false ->
+            create(Container, Options)
+    end,
+    config(Container, Options),
+    start(Container, Options),
+    state(Container, Options);
+state(Container, <<"RUNNING">>, true, Options) ->
+    cgroup(Container, Options),
+    connect(Container, Options);
+state(Container, <<"STOPPED">>, true, Options) ->
+    config(Container, Options),
+    start(Container, Options),
+    state(Container, Options);
+state(#container{port = Port} = Container, <<"FROZEN">>, true, Options) ->
+    call(Port, unfreeze, []),
+    state(Container, Options);
+state(Container, _State, true, Options) ->
+    timer:sleep(timer:seconds(5)),
+    state(Container, Options).
 
 %%--------------------------------------------------------------------
 %%% Internal functions
