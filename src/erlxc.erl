@@ -52,9 +52,11 @@
 ]}.
 
 -type chroot_options() :: {'chroot', [
-    {'dir', list(file:filename_all())} |
-    {'copy', list(file:filename_all())} |
-    {'file', list(file:filename_all())}
+    {'dir', [file:filename_all() | {file:filename_all(), filemode()}]} |
+    {'copy', [{file:filename_all(), file:filename_all()} |
+            {file:filename_all(), file:filename_all(), filemode()}]} |
+    {'file', [{file:filename_all(), iodata()} |
+            {file:filename_all(), iodata(), filemode()}]}
 ]}.
 
 -type create_options() :: {'create', [
@@ -329,7 +331,7 @@ make(Type, Path, [Obj|Rest] = Files, Options) when Type =:= dir; Type =:= copy; 
             erlang:error({case_clause, Error}, [Type, Path, Files, Options])
     end.
 
--type filemode() :: file:filename_all() | integer() | 'undefined'.
+-type filemode() :: file:file_info() | integer() | 'undefined'.
 
 -spec dir(binary(), file:filename_all() | {file:filename_all(), filemode()}) -> 'ok' | {'error', file:posix()}.
 dir(Path, Dir) when is_binary(Dir); is_list(Dir) ->

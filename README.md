@@ -18,7 +18,7 @@ cd lxc
 ```
 
 You may need to adjust the LXC defaults, for example, to match the
-bridge device.
+bridge device on your system.
 ```
 vi /usr/local/etc/lxc/default.conf
 ```
@@ -42,6 +42,8 @@ $ visudo -f /etc/sudoers.d/99_lxc
 username ALL = NOPASSWD: /path/to/erlxc/priv/erlxc
 ```
 
+erlxc has only been tested on Ubuntu 12.04/AMD6 and Ubuntu 13.04/ARM
+(beaglebone black).
 
 High Level API
 --------------
@@ -55,9 +57,50 @@ The high level API models the container as an Erlang process.
 
         Types   Container = container()
                 Name = <<>> | binary()
-                Options = [Option]
+                Options = [
+                    {path, iodata()} |
+                    {verbose, non_neg_integer()} |
+                    {config, [
+                        <<>> |
+                        {load, file:filename_all()} |
+                        {Key, Value} |
+                        Key
+                    ]} |
+                    {cgroup, [{Key, Value}]} |
+                    {chroot, [
+                        {dir, [DirSpec]} |
+                        {copy, [CopySpec]} |
+                        {file, [FileSpec]}
+                    ]} |
+                    {create, [
+                        {template, iodata()} |
+                        {bdevtype, iodata()} |
+                        {bdevspec, iodata()} |
+                        {flags, non_neg_integer()} |
+                        {argv, [iodata()]}
+                    ]} |
+                    {start, [
+                        {useinit, true | false | 0 | 1} |
+                        {argv, list(iodata())}
+                    ]} |
+                    temporary | transient | temporary
+                ]
 
-        Spawn a container.
+                Key = iodata()
+                Value = iodata()
+
+                DirSpec = file:filename_all()
+                    | {file:filename_all(), FileMode}
+                FileSpec = {file:filename_all(), FileContent}
+                    | {file:filename_all(), FileContent, FileMode}
+                CopySpec = {file:filename_all(), file:filename_all()}
+                    | {file:filename_all(), file:filename_all(), FileMode}
+
+                FileMode = file:file_info() | integer() | 'undefined'
+                FileContent = iodata()
+
+        Spawn a container. If an empty binary is specified as the name,
+        erlxc will generate a random name.
 
     exit(Container, Reason) -> true
 
@@ -74,6 +117,46 @@ The high level API models the container as an Erlang process.
                 Data = iodata()
 
         Send data to the container's console.
+
+    type(Container) -> Type
+    type(Container, Type) -> boolean()
+
+        Types   Container = container()
+                Type = temporary | transient | permanent
+
+        Get or set the container type. The "type" abuses supervisor
+        terminology to describe the behaviour of the container when the
+        owning process exits:
+
+            * temporary
+
+              The container is shutdown and the container filesystem
+              is deleted.
+
+              Unnamed containers (containers spawned using <<>>) are
+              temporary by default.
+
+            * transient
+
+              The container is shutdown when the linked process exits.
+
+              Named containers are transient by default.
+
+            * permanent
+
+              The container continues running if the owning process exits.
+
+    container(Container) -> port()
+
+        Types   Container = container()
+
+        Retrieve the port for the container for use with the liblxc module.
+
+    console(Container) -> port()
+
+        Types   Container = container()
+
+        Retrieve the port for the console.
 
 Examples
 ========
@@ -179,15 +262,15 @@ Eshell V5.8.5  (abort with ^G)
 
 Any command can be run with these caveats:
 
-    * currently stdout/stderr is discarded
+* currently stdout/stderr is discarded
 
-    * if the command is expecting stdin, unexpected things can happen
+* if the command is expecting stdin, unexpected things can happen
 
-    * the command must run in the foreground
+* the command must run in the foreground
 
-    * the console does not work so the only way to communicate with the
-      container is over the network (unless a writeable host directory is
-      bind mounted inside the container)
+* the console does not work so the only way to communicate with the
+  container is over the network (unless a writeable host directory is
+  bind mounted inside the container)
 
 For example, to run a shell inside the container listening on port 2222
 with cgroup enforcement disabled:
