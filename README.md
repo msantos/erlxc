@@ -8,7 +8,7 @@ Status:
 * the erlxc module is unstable
 
 Build Instructions
-------------------
+==================
 
 erlxc currently requires using liblxc 1.0.0:
 ```
@@ -46,11 +46,12 @@ erlxc has only been tested on Ubuntu 12.04/AMD6 and Ubuntu 13.04/ARM
 (beaglebone black).
 
 High Level API
---------------
+==============
 
 The high level API models the container as an Erlang process.
 
-## erlxc
+erlxc
+-----
 
     spawn(Name) -> Container
     spawn(Name, Options) -> Container
@@ -159,7 +160,7 @@ The high level API models the container as an Erlang process.
         Retrieve the port for the console.
 
 Examples
-========
+--------
 
 * tcpvm
 
@@ -286,7 +287,7 @@ Container = imc:spawn(
 ```
 
 Low Level API
--------------
+=============
 
 The low level API mirrors the liblxc API;
 
@@ -297,7 +298,8 @@ than shelling out to the lxc commands.
 
 NULL values are represented by the empty binary (<<>>).
 
-## liblxc
+liblxc
+------
 
     list_active_containers(Container, Path) -> List
     list_all_containers(Container, Path) -> List
@@ -476,7 +478,7 @@ NULL values are represented by the empty binary (<<>>).
         State. Set Timeout to 0 to return immediately.
 
 Examples
-========
+--------
 
 * Create an Ubuntu 12.04 container
 
@@ -514,7 +516,7 @@ destroy(Container) ->
 ```
 
 Alternatives
-------------
+============
 
 * verx provides an interface to libvirt, which has support for Linux
   containers
@@ -526,7 +528,7 @@ https://github.com/msantos/verx
 https://github.com/msantos/islet
 
 TODO
-----
+====
 
 * generate C/Erlang bindings from typespecs
 
