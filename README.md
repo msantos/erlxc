@@ -34,6 +34,15 @@ cd erlxc
 make
 ```
 
+The erlxc port will require the appropriate permissions to run. This
+can be handled by making the port executable setuid, adding the right
+file capabilities or by using `sudo`.
+```
+$ visudo -f /etc/sudoers.d/99_lxc
+username ALL = NOPASSWD: /path/to/erlxc/priv/erlxc
+```
+
+
 High Level API
 --------------
 
@@ -71,8 +80,8 @@ Examples
 
 * tcpvm
 
-This code listens on a TCP port and spawns an Ubuntu 12.04 system when
-a client connects.
+This code listens on a TCP port and spawns an Ubuntu system when a
+client connects.
 
 In a shell:
 ```
@@ -131,6 +140,66 @@ shell(Socket, #container{console = Console} = Container) ->
             ok = gen_tcp:send(Socket, Data),
             shell(Socket, Container)
     end.
+```
+
+* imc: run a command inside an "immutable" container
+
+`imc` makes a chroot, does a read-only bind mount of system directories
+and mounts writable directories as tmpfs before running the specified
+command as a random, unprivileged user.
+
+By default, a distributed erlang node is run. To start the node, compile
+the example:
+
+```
+make eg
+```
+
+Then run a node:
+
+```erlang
+./start.sh
+% node name will be: imc@192.168.213.45
+1> Container = imc:spawn("192.168.123.45").
+```
+
+Start up another distributed erlang node and connect:
+
+```
+% Assuming 192.168.213.10 is the IP address of your client
+erl -name c@192.168.123.10 -setcookie COOKIE
+^G
+(c@192.168.123.10)1>
+User switch command
+ --> r 'imc@192.168.123.45'
+ --> c
+Eshell V5.8.5  (abort with ^G)
+(imc@192.168.123.45)1>
+```
+
+Any command can be run with these caveats:
+
+    * currently stdout/stderr is discarded
+
+    * if the command is expecting stdin, unexpected things can happen
+
+    * the command must run in the foreground
+
+    * the console does not work so the only way to communicate with the
+      container is over the network (unless a writeable host directory is
+      bind mounted inside the container)
+
+For example, to run a shell inside the container listening on port 2222
+with cgroup enforcement disabled:
+```erlang
+% <<>> : choose a random name
+Container = imc:spawn(
+        <<>>,
+        "192.168.123.45",
+        [
+            {cgroup, []},
+            {cmd, "/usr/bin/mkfifo /tmp/sh; /bin/cat /tmp/sh | /bin/bash -i 2>&1 | /bin/nc -l 2222 > /tmp/sh"}
+        ]).
 ```
 
 Low Level API
