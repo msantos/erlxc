@@ -83,7 +83,7 @@ getopts(Options) when is_list(Options) ->
     Opt = lists:ukeysort(1, Expand),
 
     Switches = lists:append([ optarg(N) || N <- Opt ]),
-    [Cmd|Argv] = [ N || N <- [Exec, Progname|Switches], N /= ""],
+    [Cmd|Argv] = [ N || N <- string:tokens(Exec, " ") ++ [Progname|Switches], N /= ""],
     [find_executable(Cmd)|Argv].
 
 optarg({name, Arg})             -> switch("n", Arg);

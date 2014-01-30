@@ -42,7 +42,7 @@ $ visudo -f /etc/sudoers.d/99_lxc
 username ALL = NOPASSWD: /path/to/erlxc/priv/erlxc
 ```
 
-erlxc has only been tested on Ubuntu 12.04/AMD6 and Ubuntu 13.04/ARM
+erlxc is being tested on Ubuntu 12.04/x86_64 and Ubuntu 13.04/arm
 (beaglebone black).
 
 High Level API
@@ -513,6 +513,30 @@ shutdown(Container) ->
 
 destroy(Container) ->
     liblxc:destroy(Container).
+```
+
+Debugging
+=========
+
+There are a few options that can be passed to the lxc driver for
+debugging:
+
+* nodaemonize : run the container in the foreground
+
+  This option will allow you to see the error messages that are redirected
+  to /dev/null after liblxc daemonizes.
+
+* nocloseallfds : valgrind reserves some file descriptors for its
+  use. This option ensures liblxc doesn't close them.
+
+To run erlxc under valgrind:
+
+```erlang
+Container = erlxc:spawn("foo", [{exec, "sudo  valgrind --leak-check=yes --log-file=/tmp/lxc.log"}, nocloseallfds]).
+
+% Or
+
+Port = erlxc_drv:start("foo", [{exec, "sudo  valgrind --leak-check=yes --log-file=/tmp/lxc.log"}, nocloseallfds]).
 ```
 
 Alternatives
