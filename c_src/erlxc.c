@@ -47,7 +47,7 @@ main(int argc, char *argv[])
     ep->opt |= erlxc_opt_daemonize;
     ep->opt |= erlxc_opt_closeallfds;
 
-    while ( (ch = getopt(argc, argv, "d:e:hn:p:t:v")) != -1) {
+    while ( (ch = getopt(argc, argv, "d:hn:o:p:t:v")) != -1) {
         switch (ch) {
             case 'd':
                 if (strcmp("nodaemonize", optarg) == 0)
@@ -55,15 +55,15 @@ main(int argc, char *argv[])
                 else if (strcmp("nocloseallfds", optarg) == 0)
                     ep->opt &= ~erlxc_opt_closeallfds;
                 break;
-            case 'e':
-                errlog = strdup(optarg);
-                if (!errlog)
-                    erl_err_sys("errlog");
-                break;
             case 'n':
                 name = strdup(optarg);
                 if (!name)
                     erl_err_sys("name");
+                break;
+            case 'o':
+                errlog = strdup(optarg);
+                if (!errlog)
+                    erl_err_sys("errlog");
                 break;
             case 'p':
                 path = strdup(optarg);
@@ -283,7 +283,7 @@ usage(erlxc_state_t *ep)
     (void)fprintf(stderr,
             "usage: %s -n <name> <options>\n"
             "    -n <name>        container name\n"
-            "    -e <path>        error log\n"
+            "    -o <path>        error log\n"
             "    -p <path>        LXC path\n"
             "    -v               verbose mode\n"
             "    -d <option>      debug: nodaemonize, nocloseallfds\n"

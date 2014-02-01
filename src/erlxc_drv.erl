@@ -91,7 +91,7 @@ optarg({path, Arg})             -> switch("p", Arg);
 optarg({type, permanent})       -> switch("t", "permanent");
 optarg({type, transient})       -> switch("t", "transient");
 optarg({type, temporary})       -> switch("t", "temporary");
-optarg({errlog, Arg})           -> switch("e", Arg);
+optarg({errlog, Arg})           -> switch("o", Arg);
 optarg({daemonize, false})      -> switch("d", "nodaemonize");
 optarg({closeallfds, false})    -> switch("d", "nocloseallfds");
 optarg({verbose, Arg})          -> switch(string:copies("v", Arg));
