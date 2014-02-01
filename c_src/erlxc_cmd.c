@@ -499,10 +499,13 @@ erlxc_lxc_container_get_config_item(erlxc_state_t *ep, ETERM *arg)
 
     n = c->get_config_item(c, key, NULL, 0);
 
-    /* 0 is ??? */
-    if (n < 1) {
+    if (n < 0) {
         erl_free(key);
         return erl_mk_atom("false");
+    }
+    else if (n == 0) {
+        erl_free(key);
+        return erl_mk_binary("",0);
     }
 
     /* account for null */
@@ -519,9 +522,6 @@ erlxc_lxc_container_get_config_item(erlxc_state_t *ep, ETERM *arg)
     return t;
 
 BADARG:
-    erl_free(key);
-    erl_free(buf);
-
     return erl_mk_atom("badarg");
 }
 

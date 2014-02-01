@@ -159,7 +159,7 @@ clear_config_item(Container) ->
     true = liblxc:clear_config_item(Container, <<"lxc.network">>),
     true = liblxc:clear_config_item(Container, <<"lxc.network">>),
     Reply = liblxc:get_config_item(Container, <<"lxc.network">>),
-    ?_assertEqual(false, Reply).
+    ?_assertEqual(<<>>, Reply).
 
 state(Container) ->
     Reply = liblxc:state(Container),
