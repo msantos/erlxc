@@ -87,7 +87,7 @@ getopts(Options) when is_list(Options) ->
     [find_executable(Cmd)|Argv].
 
 optarg({name, Arg})             -> switch("n", Arg);
-optarg({path, Arg})             -> switch("p", Arg);
+optarg({path, Arg})             -> switch("P", Arg);
 optarg({type, permanent})       -> switch("t", "permanent");
 optarg({type, transient})       -> switch("t", "transient");
 optarg({type, temporary})       -> switch("t", "temporary");
