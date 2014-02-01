@@ -33,10 +33,6 @@
 
 #include <sys/param.h>
 
-#define ERLXC_VERSION   "0.1.0"
-
-#define LXCMAX  128
-
 enum {
     erlxc_opt_stop_on_exit = 1 << 0,        /* Stop the container when the port exits */
     erlxc_opt_destroy_on_exit = 1 << 1,     /* Destroy the container when the port exits (must be stopped) */

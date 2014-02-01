@@ -13,6 +13,7 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 #include "erlxc.h"
+#include "erlxc_version.h"
 
 #define ERLXC_MSG_SYNC  0
 #define ERLXC_MSG_ASYNC (htons(1))
