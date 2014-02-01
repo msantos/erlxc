@@ -7,4 +7,5 @@ deps/
 .eunit/
 .depsolver_plt
 c_src/erlxc_cmd.h
+c_src/erlxc_version.h
 src/liblxc.erl
