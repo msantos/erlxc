@@ -243,14 +243,14 @@ Then run a node:
 
 ```erlang
 ./start.sh
-% node name will be: imc@192.168.213.45
+% node name will be: imc@192.168.123.45
 1> Container = imc:spawn("192.168.123.45").
 ```
 
 Start up another distributed erlang node and connect:
 
 ```
-% Assuming 192.168.213.10 is the IP address of your client
+% Assuming 192.168.123.10 is the IP address of your client
 erl -name c@192.168.123.10 -setcookie COOKIE
 ^G
 (c@192.168.123.10)1>
@@ -270,8 +270,8 @@ Any command can be run with these caveats:
 * the command must run in the foreground
 
 * the console does not work so the only way to communicate with the
-  container is over the network (unless a writeable host directory is
-  bind mounted inside the container)
+  container is over the network (unless there is shared resource like a
+  writeable host directory bind mounted inside the container)
 
 For example, to run a shell inside the container listening on port 2222
 with cgroup enforcement disabled:
