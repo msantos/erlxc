@@ -22,6 +22,7 @@
 
         send/2,
         exit/2,
+        reboot/1,
 
         container/1,
         console/1
@@ -107,6 +108,11 @@ exit(#container{port = Port}, normal) ->
 
 exit(#container{port = Port}, kill) ->
     liblxc:stop(Port).
+
+-spec reboot(container()) -> container().
+reboot(#container{port = Port} = Container) ->
+    call(Port, reboot, []),
+    connect(Container).
 
 type(#container{port = Port}) ->
     liblxc:type(Port).
