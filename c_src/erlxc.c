@@ -42,7 +42,7 @@ main(int argc, char *argv[])
 
     ep = calloc(1, sizeof(erlxc_state_t));
     if (!ep)
-        return -1;
+        erl_err_sys("calloc");
 
     ep->opt |= erlxc_opt_stop_on_exit;
     ep->opt |= erlxc_opt_daemonize;
