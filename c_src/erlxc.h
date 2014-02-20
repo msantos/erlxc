@@ -13,25 +13,11 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 #include <lxc/lxccontainer.h>
-#include <lxc/lxc.h>
 
-#include <stdio.h>
-#include <errno.h>
 #include <string.h>
-#include <err.h>
-
-#include <erl_driver.h>
-#include <erl_interface.h>
-#include <ei.h>
-
 #include <unistd.h>
-#include <signal.h>
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <stdlib.h>
 
-#include <sys/param.h>
+#include <erl_interface.h>
 
 enum {
     erlxc_opt_stop_on_exit = 1 << 0,        /* Stop the container when the port exits */
