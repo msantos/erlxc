@@ -28,6 +28,7 @@ erlxc_test_() ->
 
 runit(Container) ->
     [
+        name(),
         chroot(Container),
         erlxc_exit(Container)
     ].
@@ -49,6 +50,16 @@ startit() ->
 
 stopit(Container) ->
     erlxc_drv:stop(Container#container.port).
+
+name() ->
+    Template1 = <<"abcd####">>,
+    Name1 = erlxc:name(Template1),
+    <<"abcd", _:4/bytes>> = Name1,
+
+    Template2 = <<"abcd1234">>,
+    Template2 = erlxc:name(Template2),
+
+    ?_assertNotMatch(Name1, Template1).
 
 chroot(Container) ->
     Chroot = [

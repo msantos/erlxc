@@ -36,6 +36,7 @@
         start/2
     ]).
 -export([dir/2, copy/2, file/2]).
+-export([name/1]).
 
 -export_type([container/0,options/0]).
 
@@ -149,7 +150,11 @@ new(Name) ->
 
 -spec new(string() | binary(),options()) -> container().
 new(<<>>, Options) ->
-    new(name(<<"erlxc">>), Options ++ [temporary]);
+    new(name(<<"erlxc########">>), Options ++ [temporary]);
+new(Name, Options) when is_list(Name) ->
+    new(list_to_binary(Name), Options);
+new(<<"@", Name/binary>>, Options) when is_list(Name) ->
+    new(name(Name), Options ++ [temporary]);
 new(Name, Options) ->
     Port = erlxc_drv:start(Name, Options ++ [transient]),
     #container{port = Port}.
@@ -303,13 +308,12 @@ bool(false) -> 0;
 bool(1) -> 1;
 bool(0) -> 0.
 
-i2b(N) ->
-    list_to_binary(integer_to_list(N)).
-
 name(Name) ->
-    % XXX possible to re-use container names
-    N = binary:decode_unsigned(crypto:rand_bytes(4)),
-    <<Name/binary, (i2b(N))/binary>>.
+    Template = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
+    Len = length(Template),
+
+    << <<case N of $# -> lists:nth(crypto:rand_uniform(1,Len),Template) ; _ -> N end>>
+        || <<N:8>> <= Name >>.
 
 -spec verbose(integer(),{atom(), list()}, proplists:proplist()) -> 'ok'.
 verbose(Level, Msg, Opt) ->
