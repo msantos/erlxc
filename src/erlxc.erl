@@ -150,10 +150,10 @@ new(Name) ->
 
 -spec new(string() | binary(),options()) -> container().
 new(<<>>, Options) ->
-    new(name(<<"erlxc########">>), Options ++ [temporary]);
+    new(<<"@erlxc########">>, Options);
 new(Name, Options) when is_list(Name) ->
     new(list_to_binary(Name), Options);
-new(<<"@", Name/binary>>, Options) when is_list(Name) ->
+new(<<"@", Name/binary>>, Options) ->
     new(name(Name), Options ++ [temporary]);
 new(Name, Options) ->
     Port = erlxc_drv:start(Name, Options ++ [transient]),
