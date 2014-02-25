@@ -54,12 +54,15 @@ stopit(Container) ->
 name() ->
     Template1 = <<"abcd####">>,
     Name1 = erlxc:name(Template1),
-    <<"abcd", _:4/bytes>> = Name1,
 
     Template2 = <<"abcd1234">>,
-    Template2 = erlxc:name(Template2),
+    Name2 = erlxc:name(Template2),
 
-    ?_assertNotMatch(Name1, Template1).
+    [
+        ?_assertMatch(<<"abcd", _:4/bytes>>, Name1),
+        ?_assertNotMatch(Name1, Template1),
+        ?_assertEqual(Name2, Template2)
+    ].
 
 chroot(Container) ->
     Chroot = [
@@ -86,9 +89,12 @@ chroot(Container) ->
     ?_assertEqual(true, Reply).
 
 erlxc_exit(Container) ->
-    true = erlxc:exit(Container, kill),
+    Status = erlxc:exit(Container, kill),
     Reply = liblxc:running(Container#container.port),
-    ?_assertEqual(false, Reply).
+    [
+        ?_assertEqual(true, Status),
+        ?_assertEqual(false, Reply)
+    ].
 
 getenv(Var, Default) ->
     case os:getenv(Var) of
