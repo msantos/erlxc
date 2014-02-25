@@ -310,7 +310,7 @@ bool(0) -> 0.
 
 name(Name) ->
     Template = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
-    Len = length(Template),
+    Len = length(Template)+1,
 
     << <<case N of $# -> lists:nth(crypto:rand_uniform(1,Len),Template) ; _ -> N end>>
         || <<N:8>> <= Name >>.
