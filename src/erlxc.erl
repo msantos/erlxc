@@ -99,7 +99,9 @@ spawn(Name, Options) ->
     Container = new(Name, Options),
     boot(Container, Options).
 
--spec send(container(),iodata()) -> 'true'.
+-spec send(container(),iodata()) -> boolean().
+send(#container{console = none}, _Data) ->
+    false;
 send(#container{console = Console}, Data) ->
     erlxc_console:send(Console, Data).
 
@@ -164,10 +166,17 @@ connect(Container) ->
     connect(Container, []).
 
 -spec connect(container(), options()) -> container().
+connect(#container{console = none} = Container, _Options) ->
+    Container;
 connect(#container{port = Port, console = undefined} = Container, Options) ->
-    Name = liblxc:name(Port),
-    Console = erlxc_console:start(Name, Options),
-    Container#container{console = Console};
+    case proplists:get_value(console, Options, true) of
+        true ->
+            Name = liblxc:name(Port),
+            Console = erlxc_console:start(Name, Options),
+            Container#container{console = Console};
+        false ->
+            Container#container{console = none}
+    end;
 connect(#container{console = Console0} = Container, Options) ->
     catch erlxc_console:stop(Console0),
     connect(Container#container{console = undefined}, Options).

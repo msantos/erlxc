@@ -12,7 +12,7 @@
 % OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 -record(container, {
         port :: port(),
-        console :: port()
+        console :: port() | 'none'
     }).
 
 -define(ERLXC_MSG_SYNC, 0:2/unsigned-integer-unit:8).
