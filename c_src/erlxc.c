@@ -166,45 +166,38 @@ erlxc_loop(erlxc_state_t *ep)
     static erlxc_msg_t *
 erlxc_msg(erlxc_state_t *ep)
 {
-    ssize_t n = 0;
-    u_int16_t buf = 0;
     u_int16_t len = 0;
+    u_int16_t cmd = 0;
     erlxc_msg_t *msg = NULL;
 
+    /* length */
     errno = 0;
-    n = erlxc_read(&buf, sizeof(buf));
-    
-    if (n != sizeof(buf)) {
+    if (erlxc_read(&len, sizeof(len)) != sizeof(len)) {
         if (errno == 0)
             return NULL;
 
-        erl_err_sys("erlxc_msg: expected=%lu, got=%lu",
-                (unsigned long)sizeof(buf),
-                (unsigned long)n);
+        erl_err_sys("erlxc_msg: expected=%lu", (unsigned long)sizeof(len));
     }
     
-    len = ntohs(buf);
+    len = ntohs(len);
     
-    if (len >= UINT16_MAX || len < sizeof(buf))
-        erl_err_quit("erlxc_msg: invalid len=%d (max=%d)", len, UINT16_MAX);
+    if (len <= sizeof(cmd))
+        erl_err_quit("erlxc_msg: invalid len=%d", len);
 
-    len -= sizeof(buf);
 
+    /* cmd */
+    if (erlxc_read(&cmd, sizeof(cmd)) != sizeof(cmd))
+        erl_err_sys("erlxc_msg: expected=%lu", (unsigned long)sizeof(cmd));
+
+    len -= sizeof(cmd);
     msg = erlxc_malloc(sizeof(erlxc_msg_t));
+    msg->cmd = ntohs(cmd);
+
+    /* arg */
     msg->arg = erlxc_malloc(len);
 
-    n = erlxc_read(&buf, sizeof(buf));
-    if (n != sizeof(buf))
-        erl_err_sys("erlxc_msg: expected=%lu, got=%lu",
-                (unsigned long)sizeof(buf),
-                (unsigned long)n);
-
-    msg->cmd = ntohs(buf);
-
-    n = erlxc_read(msg->arg, len);
-    if (n != len)
-        erl_err_sys("erlxc_msg: expected=%u, got=%lu",
-                len, (unsigned long)n);
+    if (erlxc_read(msg->arg, len) != len)
+        erl_err_sys("erlxc_msg: expected=%u", len);
     
     return msg;
 }
