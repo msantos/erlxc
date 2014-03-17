@@ -216,10 +216,10 @@ erlxc_write(u_int16_t type, ETERM *t)
     unsigned char *buf = NULL;
 
     tlen = erl_term_len(t);
-    if (tlen < 0 || tlen+sizeof(type) >= UINT16_MAX)
+    if (tlen < 0 || tlen+sizeof(hlen)+sizeof(type) >= UINT16_MAX)
         goto ERR;
 
-    hlen = ntohs(tlen+sizeof(type));
+    hlen = htons(tlen+sizeof(type));
 
     buf = erlxc_malloc(tlen);
 
