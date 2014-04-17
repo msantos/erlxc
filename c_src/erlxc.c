@@ -212,34 +212,34 @@ erlxc_send(ETERM *t)
 erlxc_write(u_int16_t type, ETERM *t)
 {
     int tlen = 0;
-    u_int16_t hlen = 0;
-    unsigned char *buf = NULL;
+    size_t len = 0;
+
+    struct {
+        u_int16_t len;
+        u_int16_t type;
+        unsigned char buf[UINT16_MAX-4];
+    } msg = {0};
 
     tlen = erl_term_len(t);
-    if (tlen < 0 || tlen+sizeof(hlen)+sizeof(type) >= UINT16_MAX)
+    if (tlen < 0 || tlen > sizeof(msg.buf))
         goto ERR;
 
-    hlen = htons(tlen+sizeof(type));
+    msg.len = htons(sizeof(msg.type) + tlen);
+    msg.type = type;
 
-    buf = erlxc_malloc(tlen);
-
-    if (erl_encode(t, buf) < 1)
+    if (erl_encode(t, msg.buf) < 1)
         goto ERR;
+
+    len = sizeof(msg.len) + sizeof(msg.type) + tlen;
 
     flockfile(stdout);
-
-    if ( (write(STDOUT_FILENO, &hlen, 2) != 2) ||
-         (write(STDOUT_FILENO, &type, 2) != 2) ||
-         (write(STDOUT_FILENO, buf, tlen) != tlen))
+    if (write(STDOUT_FILENO, &msg, len) != len)
         goto ERR;
-
     funlockfile(stdout);
 
-    erl_free(buf);
     return 0;
 
 ERR:
-    erl_free(buf);
     return -1;
 }
 
