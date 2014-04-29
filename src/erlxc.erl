@@ -158,7 +158,7 @@ new(Name, Options) when is_list(Name) ->
 new(<<"@", Name/binary>>, Options) ->
     new(name(Name), Options ++ [temporary]);
 new(Name, Options) ->
-    Port = erlxc_drv:start(Name, Options ++ [transient]),
+    Port = erlxc_drv:start(Name, Options ++ [{exec, "sudo"}, transient]),
     #container{port = Port}.
 
 -spec connect(container()) -> container().
