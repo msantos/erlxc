@@ -16,6 +16,7 @@
 
 #include <string.h>
 #include <unistd.h>
+#include <sys/uio.h>
 
 #include <erl_interface.h>
 

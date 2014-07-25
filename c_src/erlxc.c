@@ -166,34 +166,30 @@ erlxc_loop(erlxc_state_t *ep)
     static erlxc_msg_t *
 erlxc_msg(erlxc_state_t *ep)
 {
+    struct iovec iov[2];
+
     u_int16_t len = 0;
     u_int16_t cmd = 0;
     erlxc_msg_t *msg = NULL;
 
-    /* length */
-    errno = 0;
-    if (erlxc_read(&len, sizeof(len)) != sizeof(len)) {
-        if (errno == 0)
-            return NULL;
+    iov[0].iov_base = &len;
+    iov[0].iov_len = sizeof(len);
+    iov[1].iov_base = &cmd;
+    iov[1].iov_len = sizeof(cmd);
 
-        erl_err_sys("erlxc_msg: expected=%lu", (unsigned long)sizeof(len));
-    }
-    
+    if (readv(STDIN_FILENO, iov, sizeof(iov)/sizeof(iov[0]))
+            != (sizeof(len) + sizeof(cmd)))
+        return NULL;
+
     len = ntohs(len);
     
     if (len <= sizeof(cmd))
         erl_err_quit("erlxc_msg: invalid len=%d", len);
 
-
-    /* cmd */
-    if (erlxc_read(&cmd, sizeof(cmd)) != sizeof(cmd))
-        erl_err_sys("erlxc_msg: expected=%lu", (unsigned long)sizeof(cmd));
-
     len -= sizeof(cmd);
+
     msg = erlxc_malloc(sizeof(erlxc_msg_t));
     msg->cmd = ntohs(cmd);
-
-    /* arg */
     msg->arg = erlxc_malloc(len);
 
     if (erlxc_read(msg->arg, len) != len)
@@ -211,36 +207,29 @@ erlxc_send(ETERM *t)
     static int
 erlxc_write(u_int16_t type, ETERM *t)
 {
-    int tlen = 0;
-    size_t len = 0;
+    struct iovec iov[3];
 
-    struct {
-        u_int16_t len;
-        u_int16_t type;
-        unsigned char buf[UINT16_MAX-4];
-    } msg = {0};
+    u_int16_t len;
+    unsigned char buf[UINT16_MAX-4];
+    int buflen = 0;
 
-    tlen = erl_term_len(t);
-    if (tlen < 0 || tlen > sizeof(msg.buf))
-        goto ERR;
+    buflen = erl_term_len(t);
+    if (buflen < 0 || buflen > sizeof(buf))
+        return -1;
 
-    msg.len = htons(sizeof(msg.type) + tlen);
-    msg.type = type;
+    if (erl_encode(t, buf) < 1)
+        return -1;
 
-    if (erl_encode(t, msg.buf) < 1)
-        goto ERR;
+    len = htons(sizeof(type) + buflen);
 
-    len = sizeof(msg.len) + sizeof(msg.type) + tlen;
+    iov[0].iov_base = &len;
+    iov[0].iov_len = sizeof(len);
+    iov[1].iov_base = &type;
+    iov[1].iov_len = sizeof(type);
+    iov[2].iov_base = buf;
+    iov[2].iov_len = buflen;
 
-    flockfile(stdout);
-    if (write(STDOUT_FILENO, &msg, len) != len)
-        goto ERR;
-    funlockfile(stdout);
-
-    return 0;
-
-ERR:
-    return -1;
+    return writev(STDOUT_FILENO, iov, sizeof(iov)/sizeof(iov[0]));
 }
 
     static ssize_t
