@@ -20,6 +20,9 @@
 
 #include <erl_interface.h>
 
+#define get_int16(s) ((((unsigned char*)  (s))[0] << 8) | \
+                      (((unsigned char*)  (s))[1]))
+
 enum {
     erlxc_opt_stop_on_exit = 1 << 0,        /* Stop the container when the port exits */
     erlxc_opt_destroy_on_exit = 1 << 1,     /* Destroy the container when the port exits (must be stopped) */
@@ -32,11 +35,6 @@ typedef struct {
     u_int8_t verbose;
     struct lxc_container *c;
 } erlxc_state_t;
-
-typedef struct {
-    u_int32_t cmd;
-    unsigned char *arg;
-} erlxc_msg_t;
 
 int erlxc_send(ETERM *t);
 

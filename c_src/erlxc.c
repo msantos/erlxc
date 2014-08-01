@@ -19,7 +19,6 @@
 #define ERLXC_MSG_ASYNC (htons(1))
 
 static void erlxc_loop(erlxc_state_t *);
-static erlxc_msg_t *erlxc_msg(erlxc_state_t *);
 static void usage(erlxc_state_t *);
 
 static int erlxc_write(u_int16_t, ETERM *);
@@ -130,25 +129,37 @@ main(int argc, char *argv[])
     static void
 erlxc_loop(erlxc_state_t *ep)
 {
-    erlxc_msg_t *msg = NULL;
+    unsigned char buf[UINT16_MAX] = {0};
+    unsigned char *msg = buf;
     ETERM *arg = NULL;
     ETERM *reply = NULL;
+    u_int16_t len = 0;
+    u_int16_t cmd = 0;
 
     for ( ; ; ) {
-        msg = erlxc_msg(ep);
-        if (!msg)
-            break;
+        if (erlxc_read(&len, sizeof(len)) != sizeof(len))
+            return;
 
-        arg = erl_decode(msg->arg);
+        len = ntohs(len);
+
+        if (len <= sizeof(cmd) || len > sizeof(buf))
+            return;
+
+        if (erlxc_read(msg, len) != len)
+            return;
+
+        cmd = get_int16(msg);
+        msg += 2;
+        len -= 2;
+
+        arg = erl_decode(msg);
         if (!arg)
             erl_err_quit("invalid message");
 
-        reply = erlxc_cmd(ep, msg->cmd, arg);
+        reply = erlxc_cmd(ep, cmd, arg);
         if (!reply)
             erl_err_quit("unrecoverable error");
 
-        free(msg->arg);
-        free(msg);
         erl_free_compound(arg);
 
         if (erlxc_write(ERLXC_MSG_SYNC, reply) < 0)
@@ -161,41 +172,6 @@ erlxc_loop(erlxc_state_t *ep)
 
         (void)fflush(stderr);
     }
-}
-
-    static erlxc_msg_t *
-erlxc_msg(erlxc_state_t *ep)
-{
-    struct iovec iov[2];
-
-    u_int16_t len = 0;
-    u_int16_t cmd = 0;
-    erlxc_msg_t *msg = NULL;
-
-    iov[0].iov_base = &len;
-    iov[0].iov_len = sizeof(len);
-    iov[1].iov_base = &cmd;
-    iov[1].iov_len = sizeof(cmd);
-
-    if (readv(STDIN_FILENO, iov, sizeof(iov)/sizeof(iov[0]))
-            != (sizeof(len) + sizeof(cmd)))
-        return NULL;
-
-    len = ntohs(len);
-    
-    if (len <= sizeof(cmd))
-        erl_err_quit("erlxc_msg: invalid len=%d", len);
-
-    len -= sizeof(cmd);
-
-    msg = erlxc_malloc(sizeof(erlxc_msg_t));
-    msg->cmd = ntohs(cmd);
-    msg->arg = erlxc_malloc(len);
-
-    if (erlxc_read(msg->arg, len) != len)
-        erl_err_sys("erlxc_msg: expected=%u", len);
-    
-    return msg;
 }
 
     int
