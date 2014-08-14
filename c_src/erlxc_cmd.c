@@ -63,7 +63,7 @@ erlxc_lxc_container_rename(erlxc_state_t *ep, ETERM *arg)
     bool res;
 
     /* name */
-    arg = erlxc_list_head(&hd, arg);
+    (void)erlxc_list_head(&hd, arg);
     if (!hd || !ERLXC_IS_IOLIST(hd))
         goto BADARG;
 
@@ -118,7 +118,7 @@ erlxc_lxc_container_wait(erlxc_state_t *ep, ETERM *arg)
         goto BADARG;
 
     /* timeout */
-    arg = erlxc_list_head(&hd, arg);
+    (void)erlxc_list_head(&hd, arg);
     if (!hd || !ERL_IS_INTEGER(hd))
         goto BADARG;
 
@@ -191,7 +191,7 @@ erlxc_lxc_container_create(erlxc_state_t *ep, ETERM *arg)
     flags |= LXC_CREATE_QUIET;
 
     /* argv */
-    arg = erlxc_list_head(&hd, arg);
+    (void)erlxc_list_head(&hd, arg);
     if (!hd || !ERL_IS_LIST(hd))
         goto BADARG;
 
@@ -246,7 +246,7 @@ erlxc_lxc_container_start(erlxc_state_t *ep, ETERM *arg)
     useinit = ERL_INT_VALUE(hd);
 
     /* argv */
-    arg = erlxc_list_head(&hd, arg);
+    (void)erlxc_list_head(&hd, arg);
     if (!hd || !ERL_IS_LIST(hd))
         goto BADARG;
 
@@ -286,7 +286,7 @@ erlxc_lxc_container_shutdown(erlxc_state_t *ep, ETERM *arg)
     int timeout = -1;
 
     /* timeout */
-    arg = erlxc_list_head(&hd, arg);
+    (void)erlxc_list_head(&hd, arg);
     if (!hd)
         goto BADARG;
 
@@ -332,7 +332,7 @@ erlxc_lxc_container_load_config(erlxc_state_t *ep, ETERM *arg)
     char *path = NULL;
     bool res;
 
-    arg = erlxc_list_head(&hd, arg);
+    (void)erlxc_list_head(&hd, arg);
     if (!hd || !ERLXC_IS_IOLIST(hd))
         goto BADARG;
 
@@ -361,7 +361,7 @@ erlxc_lxc_container_save_config(erlxc_state_t *ep, ETERM *arg)
     char *path = NULL;
     bool res;
 
-    arg = erlxc_list_head(&hd, arg);
+    (void)erlxc_list_head(&hd, arg);
     if (!hd || !ERLXC_IS_IOLIST(hd))
         goto BADARG;
 
@@ -392,7 +392,7 @@ erlxc_lxc_container_get_keys(erlxc_state_t *ep, ETERM *arg)
     int n = 0;
     int len = 0;
 
-    arg = erlxc_list_head(&hd, arg);
+    (void)erlxc_list_head(&hd, arg);
     if (!hd || !ERLXC_IS_IOLIST(hd))
         goto BADARG;
 
@@ -449,7 +449,7 @@ erlxc_lxc_container_clear_config_item(erlxc_state_t *ep, ETERM *arg)
     bool res;
 
     /* key */
-    arg = erlxc_list_head(&hd, arg);
+    (void)erlxc_list_head(&hd, arg);
     if (!hd || !ERLXC_IS_IOLIST(hd))
         goto BADARG;
 
@@ -482,7 +482,7 @@ erlxc_lxc_container_get_config_item(erlxc_state_t *ep, ETERM *arg)
     ETERM *t = NULL;
 
     /* key */
-    arg = erlxc_list_head(&hd, arg);
+    (void)erlxc_list_head(&hd, arg);
     if (!hd || !ERLXC_IS_IOLIST(hd))
         goto BADARG;
 
@@ -541,7 +541,7 @@ erlxc_lxc_container_set_config_item(erlxc_state_t *ep, ETERM *arg)
         goto BADARG;
 
     /* value */
-    arg = erlxc_list_head(&hd, arg);
+    (void)erlxc_list_head(&hd, arg);
     if (!hd || !ERLXC_IS_IOLIST(hd))
         goto BADARG;
 
@@ -580,7 +580,7 @@ erlxc_lxc_container_set_config_path(erlxc_state_t *ep, ETERM *arg)
     bool res;
 
     /* path */
-    arg = erlxc_list_head(&hd, arg);
+    (void)erlxc_list_head(&hd, arg);
     if (!hd || !ERLXC_IS_IOLIST(hd))
         goto BADARG;
 
@@ -610,7 +610,7 @@ erlxc_lxc_container_get_cgroup_item(erlxc_state_t *ep, ETERM *arg)
     ETERM *t = NULL;
 
     /* key */
-    arg = erlxc_list_head(&hd, arg);
+    (void)erlxc_list_head(&hd, arg);
     if (!hd || !ERLXC_IS_IOLIST(hd))
         goto BADARG;
 
@@ -669,7 +669,7 @@ erlxc_lxc_container_set_cgroup_item(erlxc_state_t *ep, ETERM *arg)
         goto BADARG;
 
     /* value */
-    arg = erlxc_list_head(&hd, arg);
+    (void)erlxc_list_head(&hd, arg);
     if (!hd || !ERLXC_IS_IOLIST(hd))
         goto BADARG;
 
@@ -744,7 +744,7 @@ erlxc_lxc_container_get_ips(erlxc_state_t *ep, ETERM *arg)
         family = erl_iolist_to_string(hd);
 
     /* scope */
-    arg = erlxc_list_head(&hd, arg);
+    (void)erlxc_list_head(&hd, arg);
     if (!hd || !ERL_IS_INTEGER(hd))
         goto BADARG;
 
@@ -798,7 +798,7 @@ erlxc_list_containers(erlxc_state_t *ep, ETERM *arg,
     char **names = NULL;
     ETERM *t = NULL;
 
-    arg = erlxc_list_head(&hd, arg);
+    (void)erlxc_list_head(&hd, arg);
     if (!hd || !ERLXC_IS_IOLIST(hd))
         goto BADARG;
 
@@ -847,7 +847,7 @@ erlxc_list_to_argv(ETERM *arg)
         return NULL;
 
     /* NULL terminate */
-    argv = calloc(len + 1, sizeof(char **));
+    argv = calloc(len + 1, sizeof(char *));
 
     if (!argv)
         return NULL;
@@ -855,14 +855,18 @@ erlxc_list_to_argv(ETERM *arg)
     for (i = 0; i < len; i++) {
         arg = erlxc_list_head(&hd, arg);
         if (!hd)
-            return NULL;
+            goto BADARG;
 
         argv[i] = erl_iolist_to_string(hd);
         if (!argv[i])
-            return NULL;
+            goto BADARG;
     }
 
     return argv;
+
+BADARG:
+    erlxc_free_argv(argv);
+    return NULL;
 }
 
     static void
@@ -931,7 +935,7 @@ erlxc_test_argv(erlxc_state_t *ep, ETERM *arg)
     int i = 0;
     ETERM *t = NULL;
 
-    arg = erlxc_list_head(&hd, arg);
+    (void)erlxc_list_head(&hd, arg);
     if (!hd)
         return erl_mk_atom("badarg");
 
@@ -944,7 +948,7 @@ erlxc_test_argv(erlxc_state_t *ep, ETERM *arg)
         return erl_mk_atom("badarg");
 
     t = erl_mk_empty_list();
-    for (i = 0; i < len; i++) {
+    for (i = 0; i < len && argv[i]; i++) {
         VERBOSE(3, "arg[%d]=%s", i, argv[i]);
         t = erl_cons(erl_mk_binary(argv[i], strlen(argv[i])), t);
     }
