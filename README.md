@@ -345,7 +345,7 @@ liblxc
 
         An example of creating an Ubuntu container:
 
-            {ok, Container} = erlxc_drv:start([{name, <<"testprecise"">>}]),
+            {ok, Container} = erlxc_drv:start([{name, <<"testprecise">>}]),
             true = liblxc:create(
                 Container,
                 <<"ubuntu">>,
