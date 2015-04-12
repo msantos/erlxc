@@ -116,11 +116,11 @@ destroy(Container) ->
 
 start(Container) ->
     Reply = liblxc:start(Container),
-    ?_assertMatch(true, Reply).
+    ?_assertEqual(true, Reply).
 
 stop(Container) ->
     Reply = liblxc:stop(Container),
-    ?_assertMatch(true, Reply).
+    ?_assertEqual(true, Reply).
 
 list(Container, Type) ->
     Reply = liblxc:list(Container, Type),
@@ -194,7 +194,7 @@ set_cgroup_item(Container) ->
 
 get_cgroup_item(Container) ->
     Reply = liblxc:get_cgroup_item(Container, "cpu.shares"),
-    ?_assertEqual(<<"10\n">>, Reply).
+    ?_assertMatch(<<"10", _/binary>>, Reply).
 
 get_interfaces(Container) ->
     Reply = liblxc:get_interfaces(Container),
