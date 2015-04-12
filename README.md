@@ -345,7 +345,7 @@ liblxc
 
         An example of creating an Ubuntu container:
 
-            {ok, Container} = erlxc_drv:start([{name, <<"testprecise">>}]),
+            {ok, Container} = erlxc_drv:start(<<"testprecise">>),
             true = liblxc:create(
                 Container,
                 <<"ubuntu">>,
@@ -496,7 +496,7 @@ define(Name) ->
     define(Name, <<"lxcbr0">>).
 
 define(Name, Bridge) ->
-    Container = erlxc_drv:start([{name, Name}]),
+    Container = erlxc_drv:start(Name),
     liblxc:set_config_item(Container, <<"lxc.network.type">>, <<"veth">>),
     liblxc:set_config_item(Container, <<"lxc.network.link">>, Bridge),
     liblxc:set_config_item(Container, <<"lxc.network.flags">>, <<"up">>),
