@@ -406,5 +406,5 @@ call(Container, Call, Arg) ->
         true ->
             true;
         false ->
-            erlang:error({case_clause, false}, [Container, Call, Arg])
+            erlang:error(badarg, [Container, Call, Arg])
     end.
